@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7855a067afac8514398c9145a486482d, type: 3}
+  m_Name: 4.shadow
+  m_EditorClassIdentifier: 
+  monsterName: "\uD5E4\uBA54\uB294 \uADF8\uB9BC\uC790"
+  monsterSprite: {fileID: -7360813396638526219, guid: 3869d953bf1dcdb4a800eae703e78d79, type: 3}
+  scaleModifier: 1
+  maxHp: 40
+  attackPower: 20
+  defencePower: 0
+  attackSpeed: 1
+  negoProbability: 80
+  runProbability: 80
+  soul_drop: 12
+  gold_drop: 2
+  dropTable: []

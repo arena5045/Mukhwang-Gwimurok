@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba9ae0c9ea47d27488622e6162c07f96, type: 3}
+  m_Name: "2\uC774\uBCA4\uD2B8"
+  m_EditorClassIdentifier: 
+  eventTitle: "\uC8FC\uC6E0\uC74C"
+  eventMainDescription: "\uB545\uBC14\uB2E5\uC5D0 \uC788\uB294 \uC774\uAC74..?"
+  eventType: 2
+  dialogue: {fileID: 0}
+  choices:
+  - choiceText: "\uBC84\uB824\uC9C4 \uBC29\uC5B4\uAD6C\uB97C \uC90D\uB294\uB2E4"
+    descriptText: "\uCD5C\uB300 \uCCB4\uB825 +10"
+    nextDialogue: {fileID: 0}
+    rewardType: 0
+    rewardAmount: 0
+    success_rate: 100
+    success_Effects: []
+    failed_Effects: []
+  - choiceText: "\uBC84\uB824\uC9C4 \uBD80\uC801\uC744 \uC90D\uB294\uB2E4"
+    descriptText: "\uCD5C\uB300 \uB3C4\uB825+10"
+    nextDialogue: {fileID: 0}
+    rewardType: 0
+    rewardAmount: 0
+    success_rate: 100
+    success_Effects: []
+    failed_Effects: []

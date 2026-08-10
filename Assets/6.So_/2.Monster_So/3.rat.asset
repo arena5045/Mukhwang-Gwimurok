@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7855a067afac8514398c9145a486482d, type: 3}
+  m_Name: 3.rat
+  m_EditorClassIdentifier: 
+  monsterName: "\uADF8\uB298\uC950"
+  monsterSprite: {fileID: -6464869995595449900, guid: 721ad2a08c677b54da83489b7560b576, type: 3}
+  scaleModifier: 1.5
+  maxHp: 20
+  attackPower: 20
+  defencePower: 0
+  attackSpeed: 10
+  negoProbability: 0
+  runProbability: 50
+  soul_drop: 3
+  gold_drop: 10
+  dropTable: []

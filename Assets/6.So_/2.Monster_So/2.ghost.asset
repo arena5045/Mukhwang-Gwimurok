@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7855a067afac8514398c9145a486482d, type: 3}
+  m_Name: 2.ghost
+  m_EditorClassIdentifier: 
+  monsterName: "\uBC30\uD68C\uD558\uB294 \uD63C\uB839"
+  monsterSprite: {fileID: -2749261331969839478, guid: eaa255d13107540419fbc0cf1ee6802b, type: 3}
+  scaleModifier: 2
+  maxHp: 30
+  attackPower: 15
+  defencePower: 10
+  attackSpeed: 5
+  negoProbability: 30
+  runProbability: 70
+  soul_drop: 10
+  gold_drop: 1
+  dropTable: []

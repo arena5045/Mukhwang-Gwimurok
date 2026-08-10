@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 784de0c90c653f34ca13ff267a04c1d2, type: 3}
+  m_Name: "\uCCAB \uB300\uC0AC"
+  m_EditorClassIdentifier: 
+  lines:
+  - actionType: 0
+    characterName: "\uD604\uB839"
+    text: "\uC5EC\uC5B4, \uC5B4\uC11C \uC624\uC2DC\uAC8C. \uB9DD\uC6D4\uCD0C\uC5D0.\n\uC740\uC740\uD55C
+      \uB2EC\uBE5B \uC544\uB798 \uCDA4\uCD94\uB294 \uADC0\uC2E0\uB4E4\u2026\n\uAF64
+      \uC6B4\uCE58 \uC788\uC9C0 \uC54A\uC18C?\n.\n.\n.\n\uC544\uC544, \uB3C4\uC0AC
+      \uB098\uC73C\uB9AC\uC168\uAD6C\uB9CC.\n\uB09C \uB610 \uAE38 \uC783\uC740 \uB098\uADF8\uB124\uC778
+      \uC904 \uC54C\uC558\uC9C0. \uD558\uD558!"
+    portrait: {fileID: 433052714748676132, guid: bc361eaada21e0a49be9c7c02e93981c, type: 3}
+    emotion: 0
+    triggeredEvent_Data: {fileID: 0}
+    triggeredEvent_Effect: []
+  - actionType: 0
+    characterName: "\uD604\uB839"
+    text: "\uADF8\uB798, \uC774\uB807\uAC8C \uB9CC\uB09C \uAC83\uB3C4 \n\uC778\uC5F0
+      \uC544\uB2C8\uACA0\uC18C.\n\uC774 \uC911\uC5D0\uC11C \uB9C8\uC74C\uC5D0 \uB4DC\uB294
+      \uAC78 \n\uD558\uB098 \uACE0\uB974\uC2DC\uC624.\n\n\uC624\uB298\uC740\u2026
+      \uB364\uC73C\uB85C \uB4DC\uB9AC\uB9AC\uB2E4."
+    portrait: {fileID: 433052714748676132, guid: bc361eaada21e0a49be9c7c02e93981c, type: 3}
+    emotion: 0
+    triggeredEvent_Data: {fileID: 0}
+    triggeredEvent_Effect: []
+  - actionType: 1
+    characterName: "\uD604\uB839"
+    text: "-----------\uB9DD\uC6D4\uCD0C \uCCAB \uC774\uBCA4\uD2B8 \uC2E4\uD589-----------"
+    portrait: {fileID: 433052714748676132, guid: bc361eaada21e0a49be9c7c02e93981c, type: 3}
+    emotion: 0
+    triggeredEvent_Data: {fileID: 11400000, guid: 89b01555abb028f49ab20858b86197f2, type: 2}
+    triggeredEvent_Effect: []
+  - actionType: 0
+    characterName: "\uD604\uB839"
+    text: "\uC88B\uC544, \uADF8\uAC78\uB85C \uC815\uD558\uC168\uAD70. \n\n\uC5ED\uC2DC
+      \uBCF4\uB294 \uB208\uC774 \uC788\uAD6C\uBA3C!\n\n\uC774\uBC88\uC5D4 \uB364\uC774\uC9C0\uB9CC,
+      \n\uB2E4\uC74C\uBD80\uD134 \uB300\uAC00\uB97C \uBC1B\uC544\uC57C \uD560 \uD14C\uB2C8\u2026
+      \n\uADF8\uB9AC \uC544\uC2DC\uC624!"
+    portrait: {fileID: 433052714748676132, guid: bc361eaada21e0a49be9c7c02e93981c, type: 3}
+    emotion: 0
+    triggeredEvent_Data: {fileID: 0}
+    triggeredEvent_Effect: []
+  - actionType: 0
+    characterName: "\uD604\uB839"
+    text: "\uADF8\uB7FC, \uBB34\uC6B4\uC744 \uBE4C\uC9C0!"
+    portrait: {fileID: 433052714748676132, guid: bc361eaada21e0a49be9c7c02e93981c, type: 3}
+    emotion: 0
+    triggeredEvent_Data: {fileID: 0}
+    triggeredEvent_Effect: []
+  - actionType: 4
+    characterName: 
+    text: "\uC885\uB8CC"
+    portrait: {fileID: 0}
+    emotion: 0
+    triggeredEvent_Data: {fileID: 0}
+    triggeredEvent_Effect: []

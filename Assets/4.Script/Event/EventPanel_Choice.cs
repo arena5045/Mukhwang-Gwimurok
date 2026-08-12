@@ -33,13 +33,17 @@ public class EventPanel_Choice : MonoBehaviour
             int capturedIndex = i; // 
             event_Buttons[i].GetComponent<Button>().onClick.AddListener(() =>
             {
-                EventManager.Instance.Execute(GameManager.Instance.Context, data.choices[capturedIndex]);
+                EventChoice selectedChoice = data.choices[capturedIndex];
+                EventManager.Instance.Execute(GameManager.Instance.Context, selectedChoice);
 
                 //원래쓰던 초이스 실행함수
                 //data.choices[capturedIndex].Execute(GameManager.Instance.Context);
 
-                EventUIManager.Instance.EventEnd(); // 이벤트 매니저에서 종료 이벤트 호출
-                this.gameObject.SetActive(false); // UI 닫기 등
+                // 선택 UI를 먼저 닫은 뒤 분기 대화를 시작해야 같은 화면에서 두 UI가 겹치지 않는다.
+                this.gameObject.SetActive(false);
+
+                // nextDialogue가 비어 있으면 EventEnd 내부에서 기존 대화의 다음 줄로 바로 진행한다.
+                EventUIManager.Instance.EventEnd(selectedChoice.nextDialogue);
             });
         }
     }

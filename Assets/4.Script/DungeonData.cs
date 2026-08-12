@@ -15,26 +15,38 @@ public class DungeonData : ScriptableObject
     // 던전 진입 시 랜덤으로 몬스터 한 마리 뽑기
     public Monster_So GetRandomMonster()
     {
-        // 여기에 확률 로직을 넣어 엘리트나 보스가 가끔 나오게 할 수 있습니다.
-        // 지금은 단순하게 일반 몬스터 중 하나를 뽑는 예시입니다.
-        int rand = Random.Range(0, normalMonsters.Count);
-        return normalMonsters[rand];
+        return GetRandomMonsterFrom(normalMonsters, "일반");
     }
 
     public Monster_So GetRandomMonster_Elite()
     {
-        // 여기에 확률 로직을 넣어 엘리트나 보스가 가끔 나오게 할 수 있습니다.
-        // 지금은 단순하게 일반 몬스터 중 하나를 뽑는 예시입니다.
-        int rand = Random.Range(0, eliteMonsters.Count);
-        return eliteMonsters[rand];
+        return GetRandomMonsterFrom(eliteMonsters, "정예");
     }
 
     public Monster_So GetRandomMonster_Boss()
     {
-        // 여기에 확률 로직을 넣어 엘리트나 보스가 가끔 나오게 할 수 있습니다.
-        // 지금은 단순하게 일반 몬스터 중 하나를 뽑는 예시입니다.
-        int rand = Random.Range(0, bossMonsters.Count);
-        return bossMonsters[rand];
+        return GetRandomMonsterFrom(bossMonsters, "보스");
+    }
+
+    private Monster_So GetRandomMonsterFrom(List<Monster_So> monsters, string category)
+    {
+        // 던전 콘텐츠가 미완성인 동안 빈 목록이나 빠진 참조가 들어올 수 있다.
+        // 호출부가 null을 받아 맵으로 복귀할 수 있도록 여기서는 예외 대신 실패를 반환한다.
+        if (monsters == null || monsters.Count == 0)
+        {
+            Debug.LogError($"[DungeonData] {dungeonName} 던전에 {category} 몬스터가 없습니다.", this);
+            return null;
+        }
+
+        int startIndex = Random.Range(0, monsters.Count);
+        for (int offset = 0; offset < monsters.Count; offset++)
+        {
+            Monster_So monster = monsters[(startIndex + offset) % monsters.Count];
+            if (monster != null) return monster;
+        }
+
+        Debug.LogError($"[DungeonData] {dungeonName} 던전의 {category} 몬스터 참조가 모두 비어 있습니다.", this);
+        return null;
     }
 
     public DialogueSequence Call_StartEvent()

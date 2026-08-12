@@ -12,14 +12,25 @@ public class ScreenFader : MonoBehaviour
 
     void Awake()
     {
+        // ScreenFader는 현재 씬의 fadeImage를 직접 사용한다.
+        // 씬을 넘어 유지하지 않으며, 중복 배치된 객체만 제거한다.
         if (Instance == null)
         {
             Instance = this;
-            //DontDestroyOnLoad(gameObject); // 씬 전환 시 유지
         }
         else
         {
             Destroy(gameObject);
+            return;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // 다음 씬에서 새 ScreenFader가 자신을 등록할 수 있도록 참조를 비운다.
+        if (Instance == this)
+        {
+            Instance = null;
         }
     }
 

@@ -2,6 +2,7 @@ using DG.Tweening;
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class GameUiManager : MonoBehaviour
@@ -34,11 +35,24 @@ public class GameUiManager : MonoBehaviour
     // 현재 페이드 애니메이션이 진행 중인지 체크
     public bool IsFading { get; private set; }
 
+    // 닫기 버튼을 연속으로 눌러 동일한 페이드 코루틴이 여러 개 실행되는 것을 막는다.
+    // 중복 실행되면 패널 활성 상태와 IsFading 해제 시점이 서로 어긋날 수 있다.
+    private bool isClosingShop;
+
     //인 게임에서 ui를 관리하는 싱글턴
     public static GameUiManager Instance { get; private set; }
 
     private void Awake()
     {
+        // 이 매니저의 필드는 현재 씬 Canvas와 패널을 직접 참조한다.
+        // 따라서 씬을 넘어 유지하지 않고, 같은 씬 안에서 실수로 중복 배치된 경우만 제거한다.
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        // UI 참조는 씬 전용이므로 GameUiManager 자체도 씬과 함께 교체한다.
         Instance = this;
 
         // 화면 해상도의 너비를 가져옵니다.
@@ -47,16 +61,27 @@ public class GameUiManager : MonoBehaviour
         fadeImage.anchoredPosition = new Vector2(-2 * screenWidth, 0);
     }
 
+    private void OnDestroy()
+    {
+        // 씬 종료 후 다른 코드가 파괴된 UI를 싱글턴으로 찾지 않도록 참조를 비운다.
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.A))
+#if UNITY_EDITOR
+        if (Keyboard.current != null && Keyboard.current.aKey.wasPressedThisFrame)
         {
             StartCoroutine(FadeIn());
         }
-        if (Input.GetKeyDown(KeyCode.S))
+        if (Keyboard.current != null && Keyboard.current.sKey.wasPressedThisFrame)
         {
             StartCoroutine(FadeOut());
         }
+#endif
     }
 
     public void RefreshUi()
@@ -64,10 +89,16 @@ public class GameUiManager : MonoBehaviour
         GameContext context = GameManager.Instance.Context;
 
         playerhpText.text = $"체력 : {context.player.currentHP}";
-        playerhpBar.fillAmount = context.player.currentHP / context.player.stats.MaxHp;
+        // 정수끼리 나누면 중간 체력이 모두 0으로 잘리므로 float로 변환한다.
+        // 최대치가 잘못 설정된 콘텐츠도 0으로 나누지 않도록 별도로 방어한다.
+        playerhpBar.fillAmount = context.player.stats.MaxHp > 0
+            ? (float)context.player.currentHP / context.player.stats.MaxHp
+            : 0f;
 
         playempText.text = $"도력 : {context.player.currentMp}";
-        playermpBar.fillAmount = context.player.currentMp / context.player.stats.MaxMp;
+        playermpBar.fillAmount = context.player.stats.MaxMp > 0
+            ? (float)context.player.currentMp / context.player.stats.MaxMp
+            : 0f;
 
         playerSoulText.text = context.player.soul.ToString();
         playerGoldText.text = context.player.gold.ToString();
@@ -76,7 +107,10 @@ public class GameUiManager : MonoBehaviour
     public void UpdateGoldUi()
     {
         // 현재 텍스트의 숫자를 읽어와서 targetGold까지 부드럽게 변화시킴
-        int currentGold = int.Parse(playerGoldText.text.Replace(",", ""));
+        if (!int.TryParse(playerGoldText.text.Replace(",", ""), out int currentGold))
+        {
+            currentGold = GameManager.Instance.Context.player.gold;
+        }
 
         DOTween.To(() => currentGold, x => {
             currentGold = x;
@@ -87,7 +121,10 @@ public class GameUiManager : MonoBehaviour
     public void UpdateSoulUi()
     {
         // 현재 텍스트의 숫자를 읽어와서 targetGold까지 부드럽게 변화시킴
-        int currentSoul = int.Parse(playerSoulText.text.Replace(",", ""));
+        if (!int.TryParse(playerSoulText.text.Replace(",", ""), out int currentSoul))
+        {
+            currentSoul = GameManager.Instance.Context.player.soul;
+        }
 
         DOTween.To(() => currentSoul, x => {
             currentSoul = x;
@@ -159,6 +196,9 @@ public class GameUiManager : MonoBehaviour
     }
     public void ShopUiClose()
     {
+        if (isClosingShop) return;
+
+        isClosingShop = true;
         StartCoroutine(ShopUiExit_Coroutine());
     }
 
@@ -171,12 +211,13 @@ public class GameUiManager : MonoBehaviour
         Instance.MapUiOpen(false);
 
         yield return Instance.FadeOut();
+        isClosingShop = false;
     }
 
     public void UpdatePlayerHPUI_battle(int current, bool isSmooth = true)
     {
         int maxhp = BattleManager.instance.currentPlayerInfo.maxhp;
-        float targetFill = (float)current / maxhp;
+        float targetFill = maxhp > 0 ? (float)current / maxhp : 0f;
 
         if (isSmooth)
         {

@@ -65,6 +65,11 @@ public class SettingManager : MonoBehaviour
         if (touched) return;
         touched = true;
 
+        // Main 씬의 SettingManager는 씬 전환과 함께 파괴되므로 선택값을 자신이 보관할 수 없다.
+        // ScriptableObject 선택값만 GameManager의 임시 요청 공간에 전달하고,
+        // 실제 PlayerData와 GameContext 생성은 Ingame의 BeginNewRun에서 한 번만 수행한다.
+        GameManager.RequestNewRun(selectedChars, selectedDungeon);
+
         //화면 줌
         settingCanvas.GetComponent<RectTransform>().DOScale(1.2f, 1f).SetEase(Ease.InOutSine);
         //여기서 다음 패널로 넘어감

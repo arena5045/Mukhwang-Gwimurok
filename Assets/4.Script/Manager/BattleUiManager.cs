@@ -31,6 +31,8 @@ public class BattleUiManager : MonoBehaviour
 
     [Header("배틀종료버튼")]
     public GameObject battle_end_panel;
+    // 전투 종료 버튼의 연속 입력으로 맵 복귀와 게임오버 코루틴이 중복 시작되는 것을 방지한다.
+    private bool isExitingBattle;
 
 
     // 외부(BattleManager 등)에서 이 함수를 호출해 로그를 쌓습니다.
@@ -110,14 +112,20 @@ private IEnumerator ScrollToBottom()
         ClearLog();
         ResetMonsterVisual();
 
-        GameManager.Instance.Refresh_HpMp();
+        // UI만 새로 그리는 것이 아니라 현재 규칙에 따라 실제 플레이어 HP/MP도 회복한다.
+        // 상태 변경 책임은 GameManager에 두어 새 런 초기화와 UI 갱신 경로가 섞이지 않게 한다.
+        GameManager.Instance.RestorePlayerVitals();
 
         GameUiManager.Instance.MapUiOpen(false);
 
         yield return GameUiManager.Instance.FadeOut();
+        isExitingBattle = false;
     }
     public void BattleUiExit()
     {
+        if (isExitingBattle) return;
+
+        isExitingBattle = true;
         if(GameManager.Instance.isGameOver)
         {
             Debug.Log("으앙쥬금");

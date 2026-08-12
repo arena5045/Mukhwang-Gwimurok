@@ -19,7 +19,23 @@ public class EventUIManager : MonoBehaviour
 
     private void Awake()
     {
+        // 이벤트 선택 패널과 대화 매니저는 씬 객체이므로 이 매니저도 씬 종속으로 관리한다.
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         Instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        // 씬이 닫힌 뒤 파괴된 이벤트 패널로 접근하는 것을 방지한다.
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 
     public void Start()
@@ -63,8 +79,37 @@ public class EventUIManager : MonoBehaviour
 
     public void EventEnd()
     {
+        EventEnd(null);
+    }
+
+    /// <summary>
+    /// 선택 이벤트를 끝내고 대화 흐름을 이어간다.
+    /// nextDialogue가 있으면 현재 대화 상태를 Stack에 저장하고 분기 대화를 시작하며,
+    /// 없으면 기존 동작 그대로 현재 Sequence의 다음 DialogueLine을 실행한다.
+    /// </summary>
+    public void EventEnd(DialogueSequence nextDialogue)
+    {
+        // Inspector 참조가 비어 있어도 씬의 DialogueManager 싱글턴으로 한 번 복구한다.
+        // 둘 다 없다면 분기 상태를 변경하지 않고 오류를 남겨 잘못된 참조를 추적할 수 있게 한다.
+        if (dialogueManager == null)
+        {
+            dialogueManager = DialogueManager.Instance;
+        }
+
+        if (dialogueManager == null)
+        {
+            Debug.LogError("[EventUIManager] 이벤트 종료 후 이어갈 DialogueManager가 없습니다.");
+            return;
+        }
+
         if(!dialogueManager.canInput && dialogueManager.isTexting)
         {//대화중 이벤트였다면 다음대사
+            if (nextDialogue != null && dialogueManager.StartBranchDialogue(nextDialogue))
+            {
+                return;
+            }
+
+            // nextDialogue가 없거나 잘못된 데이터라면 기존 이벤트의 다음 줄로 계속 진행한다.
             dialogueManager.ShowNextLine();
             dialogueManager.canInput = true;
         }

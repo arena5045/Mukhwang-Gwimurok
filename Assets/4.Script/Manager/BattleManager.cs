@@ -114,21 +114,46 @@ public class BattleManager : MonoBehaviour
 
     private void Awake()
     {
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
+        // BattleManager는 BattleUiManager를 직접 참조하므로 Ingame 씬과 수명을 같이한다.
+        // 씬 전환 후에도 유지하면 새 UI가 아니라 파괴된 이전 UI를 참조하게 되므로
+        // DontDestroyOnLoad를 사용하지 않고, 같은 씬 안의 중복 인스턴스만 제거한다.
+        if (instance != null && instance != this)
         {
             Destroy(gameObject);
+            return;
         }
 
+        // 전투 UI 참조를 가진 매니저이므로 현재 게임 씬과 수명을 함께한다.
+        instance = this;
 
         if(buiManager ==null)
         {
             buiManager = GetComponent<BattleUiManager>();
         }
+    }
+
+    private void OnDestroy()
+    {
+        // 다른 중복 객체가 파괴되는 상황에서 정상 인스턴스의 static 참조까지
+        // 지우지 않도록 현재 소유자인지 확인한 뒤 해제한다.
+        if (instance == this)
+        {
+            instance = null;
+        }
+    }
+
+    /// <summary>
+    /// 새 런 시작 시 이전 전투의 런타임 상태를 폐기한다.
+    /// 진행 중인 턴 코루틴, 기습 여부, 플레이어·몬스터 전투 복사본을 모두 비워
+    /// 이전 전투가 새 런의 UI나 보상 처리에 뒤늦게 개입하지 못하게 한다.
+    /// </summary>
+    public void ResetForNewRun()
+    {
+        // 이전 런의 전투 코루틴과 임시 배율이 다음 런으로 넘어가지 않게 한다.
+        StopAllCoroutines();
+        surprise = false;
+        currentPlayerInfo = null;
+        currentMonsterInfo = null;
     }
 
 
@@ -323,8 +348,10 @@ public class BattleManager : MonoBehaviour
 
     public void RunBtn()
     {
+        // 협상 확률(nego_pro)과 도주 확률(run_pro)은 몬스터 데이터에서 별도로 설정된다.
+        // 도주 버튼은 반드시 run_pro만 사용해야 두 행동의 밸런스 값을 독립적으로 조정할 수 있다.
         float negovalue = Random.Range(0f, 100f);
-        if (negovalue <= currentMonsterInfo.nego_pro)
+        if (negovalue <= currentMonsterInfo.run_pro)
         {
             buiManager.AddLog($"");
             buiManager.AddLog($"");

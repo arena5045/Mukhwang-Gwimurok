@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class MapManager : MonoBehaviour
@@ -7,8 +6,8 @@ public class MapManager : MonoBehaviour
     public MapGenerator generator;
     public MapUIManager uiManager;
 
-    public List<List<Vector2Int>> maps; // 맵 데이터 저장
-    Dictionary<int, List<MapNodeData>> floorNodes = new(); // 각 층의 노드
+    public List<List<Vector2Int>> maps; // 생성된 경로의 격자 좌표 목록
+    Dictionary<int, List<MapNodeData>> floorNodes = new(); // 층별 노드 조회용 런타임 캐시
 
     public MapNodeData cur_nodedata = null;
     public GameObject cur_mapnode = null;
@@ -23,35 +22,39 @@ public class MapManager : MonoBehaviour
 
     public bool isVertical;
 
+    [Header("기능 플래그")]
+    [Tooltip("상점 구현이 완료되기 전까지 절차 맵에서 상점 노드를 생성하지 않습니다.")]
+    public bool enableShop = false;
+
     
 
-    private void Awake()
+    private void OnDestroy()
     {
-        // GameManager가 싱글턴으로 이미 준비되어 있다고 가정
-        if (GameManager.Instance != null)
-        {
-            // GameManager의 MapManager 속성(Property)에 현재 인스턴스(this)를 할당
-            GameManager.Instance.mapManager = this;
-        }
-        else
-        {
-            Debug.LogError("GameManager 인스턴스가 MapManager보다 먼저 초기화되지 않았습니다.");
-        }
+        // GameManager와 MapManager는 같은 씬에 있지만 Unity의 파괴 순서는 보장되지 않는다.
+        // GameManager가 아직 살아 있는 경우에만 등록을 해제하여 파괴된 맵 UI 참조를 남기지 않는다.
+        GameManager.Instance?.UnregisterMap(this);
     }
 
-    void Start()
+    private void Start()
     {
-        //var mapData = generator.GenerateMap();
-        //uiManager.CreateMapUI(mapData);
+        // Awake에서는 다른 매니저의 초기화 완료를 가정하지 않는다.
+        // 모든 객체의 Awake가 끝난 Start 시점에 의존성을 확인하고 맵 생성 절차를 시작한다.
+        if (GameManager.Instance == null || uiManager == null)
+        {
+            Debug.LogError("[MapManager] GameManager 또는 MapUIManager가 준비되지 않았습니다.", this);
+            return;
+        }
 
+        // 1. 절차 경로와 노드 데이터를 메모리상에 생성한다.
+        floorNodes.Clear();
         var pathGen = new GridPathGenerator(width, height, pathCount);
         maps = pathGen.GeneratePaths(isVertical);
 
 
         var nodeConverter = new GridToNodeConverter(width, height);
-        var nodeList = nodeConverter.ConvertToNodes(maps, isVertical, spacingX, spacingY, offsetY, out MapNodeData startNode);
+        var nodeList = nodeConverter.ConvertToNodes(maps, isVertical, enableShop, spacingX, spacingY, offsetY, out MapNodeData startNode);
 
-        // ID를 Key로 하여 모든 노드에 접근할 수 있는 전역 딕셔너리
+        // 2. 연결 ID로 즉시 노드를 찾을 수 있도록 조회용 딕셔너리를 구성한다.
         Dictionary<int, MapNodeData> NodeDataById = new();
 
         // 모든 노드를 하나씩 확인
@@ -70,13 +73,19 @@ public class MapManager : MonoBehaviour
             //노드 id를 딕셔너리에 노드와 추가
             NodeDataById.Add(node.id, node);
         }
-        // 기존 UI 시스템 재활용
-        uiManager.CreateMapUI(nodeList);
-        //매니저 컨텍스트에 값 저장
-        GameManager.Instance.SetMap(maps, nodeList, NodeDataById);
+        // 3. GameManager가 새 런을 만들고 Context에 맵 데이터를 등록한다.
+        // 등록이 실패하면 불완전한 Context로 UI가 동작하지 않도록 여기서 중단한다.
+        if (!GameManager.Instance.RegisterMap(this, maps, nodeList, NodeDataById))
+        {
+            return;
+        }
 
-        //현재 위치 = 시작위치
+        // 4. 등록된 데이터로 실제 버튼과 연결선을 만든 뒤 시작 노드 상태를 적용한다.
+        uiManager.CreateMapUI(nodeList);
         Move_Node(startNode);
+
+        // 5. 노드의 GameObject 참조까지 모두 연결된 뒤에만 시작 이벤트와 UI 갱신을 허용한다.
+        GameManager.Instance.NotifyMapReady(this);
     }
     
     public void Move_Map(RectTransform node)

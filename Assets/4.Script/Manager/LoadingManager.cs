@@ -43,7 +43,8 @@ public class LoadingManager : MonoBehaviour
 
     void Awake()
     {
-        // 인스턴스가 비어 있다면 자신을 등록
+        // 로딩 화면은 씬 사이를 실제로 연결해야 하므로 전체 매니저 중 유일하게 영속화한다.
+        // 이후 씬에 중복 생성된 LoadingManager는 기존 로딩 코루틴과 UI를 보호하기 위해 제거한다.
         if (_instance == null)
         {
             _instance = this;
@@ -52,10 +53,20 @@ public class LoadingManager : MonoBehaviour
         else if (_instance != this)
         {
             Destroy(gameObject);
+            return;
         }
 
         loadingPanel.SetActive(false);
         fadeImage?.gameObject.SetActive(false);
+    }
+
+    private void OnDestroy()
+    {
+        // 애플리케이션 종료나 명시적 파괴 뒤 Instance가 파괴된 객체를 반환하지 않게 한다.
+        if (_instance == this)
+        {
+            _instance = null;
+        }
     }
 
 

@@ -4,7 +4,8 @@ using UnityEngine;
 public class GameContext
 {
     // 플레이어 정보
-    public PlayerData player;
+    public PlayerData player;          // 런 중 변경되는 실제 플레이어 수치
+    public CharacterData character;    // 이번 런을 시작할 때 선택한 캐릭터 원본 데이터
 
     // 현재 위치 정보 (노드, 지역, 스테이지)
     //public MapNode currentNode;

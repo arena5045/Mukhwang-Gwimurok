@@ -18,20 +18,14 @@ MonoBehaviour:
   dialogue: {fileID: 0}
   choices:
   - choiceText: "\uC218\uC218\uD55C \uACE1\uC625\uC744 \uC9D1\uB294\uB2E4."
-    descriptText: "\uACF5\uACA9\uB825 +5"
+    descriptText: "\uACF5\uACA9\uB825 +50"
     nextDialogue: {fileID: 0}
     rewardType: 0
     rewardAmount: 0
     success_rate: 100
     success_Effects:
-    - effectAsset: {fileID: 11400000, guid: 058558f40b460c04a82f0f6164ead35d, type: 2}
-      param:
-        type: 1
-        intValue: 50
-        floatValue: 0
-        stringValue: 
-        boolValue: 0
-        referenceValue: {fileID: 0}
+    - effect:
+        rid: 4748692044563611720
     failed_Effects: []
   - choiceText: "\uCCAD\uB3D9 \uAC70\uC6B8\uC744 \uC9D1\uB294\uB2E4."
     descriptText: "\uBC29\uC5B4\uB825 +5"
@@ -57,3 +51,11 @@ MonoBehaviour:
     success_rate: 100
     success_Effects: []
     failed_Effects: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 4748692044563611720
+      type: {class: ModifyStatEffect, ns: , asm: Assembly-CSharp}
+      data:
+        stat: 0
+        amount: 50

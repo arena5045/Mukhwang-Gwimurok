@@ -31,13 +31,15 @@ public class EventChoice
 
         foreach (var effect in effectsToRun)
         {
-            if (effect.effectAsset is IEventEffect effectInstance)
+            if (effect != null)
             {
-                effectInstance.Execute(context, effect.param);
+                // 실제 효과 호출은 EventSet 한 곳으로 모아 인라인 효과도
+                // 기존 선택지 성공/실패 흐름에서 정확히 한 번만 실행한다.
+                effect.Execute(context);
             }
             else
             {
-                Debug.LogWarning($"[EventChoice] {effect.effectAsset}은 IEventEffect가 아님");
+                Debug.LogWarning("[EventChoice] 비어 있는 EventSet은 실행할 수 없습니다.");
             }
         }
 

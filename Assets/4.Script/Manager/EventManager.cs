@@ -80,7 +80,7 @@ public class EventManager : MonoBehaviour
 
     /// <summary>
     /// 선택지 성공 확률을 한 번 판정하고, 성공 또는 실패 쪽 효과 목록 하나만 실행한다.
-    /// 각 EventSet은 IEventEffect 경로를 통해 정확히 한 번만 호출하여 재화·체력 효과의 중복 적용을 막는다.
+    /// 각 EventSet의 인라인 효과를 정확히 한 번만 호출하여 재화·체력 효과의 중복 적용을 막는다.
     /// </summary>
     public bool Execute(GameContext context,EventChoice eventC)
     {
@@ -103,13 +103,13 @@ public class EventManager : MonoBehaviour
 
         foreach (var effect in effectsToRun)
         {
-            if (effect != null && effect.effectAsset is IEventEffect effectInstance)
+            if (effect != null)
             {
-                effectInstance.Execute(context, effect.param);
+                effect.Execute(context);
             }
             else
             {
-                Debug.LogWarning($"[EventChoice] {effect.effectAsset}은 IEventEffect가 아님");
+                Debug.LogWarning("[EventManager] 비어 있는 EventSet은 실행할 수 없습니다.");
             }
         }
 
@@ -130,13 +130,13 @@ public class EventManager : MonoBehaviour
 
         foreach (EventSet effect in effects)
         {
-            if (effect != null && effect.effectAsset is IEventEffect effectInstance)
+            if (effect != null)
             {
-                effectInstance.Execute(context, effect.param);
+                effect.Execute(context);
             }
             else
             {
-               Debug.LogWarning($"[EventChoice] {effect.effectAsset}은 IEventEffect가 아님");
+                Debug.LogWarning("[EventManager] 비어 있는 EventSet은 실행할 수 없습니다.");
             }
         }
 

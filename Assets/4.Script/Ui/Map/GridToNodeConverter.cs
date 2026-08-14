@@ -89,10 +89,8 @@ public class GridToNodeConverter
     }
     */
 
-    public List<MapNodeData> ConvertToNodes(List<List<Vector2Int>> paths, bool vertical, bool includeShop, float spacingX, float spacingY, float offsetY, out MapNodeData startNode)
+    public List<MapNodeData> ConvertToNodes(List<List<Vector2Int>> paths, bool vertical, float spacingX, float spacingY, float offsetY, out MapNodeData startNode)
     {
-        // includeShop은 맵 생성 단계의 기능 플래그다.
-        // false이면 아직 구현 중인 상점 노드를 후보에서 제외하되 전투·정예·이벤트 비율은 유지한다.
         //반환할 맵 데이터
         Dictionary<Vector2Int, MapNodeData> nodeMap = new();
 
@@ -110,7 +108,9 @@ public class GridToNodeConverter
                     var node = new MapNodeData
                     {
                         id = idCounter++,
-                        nodeType = (NodeType)Random.Range(1, includeShop ? 5 : 4),
+                        // Random.Range의 정수형 최대값은 포함되지 않는다.
+                        // 따라서 1~4에 해당하는 전투·정예·이벤트·상점을 동일한 후보로 사용한다.
+                        nodeType = (NodeType)Random.Range(1, 5),
                         position = vertical
                         ? new Vector2(coord.x * spacingX, coord.y * spacingY + offsetY)
          :                new Vector2(coord.x * spacingX + offsetY, coord.y * spacingY),

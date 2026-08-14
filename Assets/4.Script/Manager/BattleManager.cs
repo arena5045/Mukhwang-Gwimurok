@@ -6,16 +6,23 @@ public class BattleManager : MonoBehaviour
     public static BattleManager instance { get; private set; }
 
     public Monster_So test_so;
-    [Header("전투 배율")]
-    public float statMultiplier = 0.025f;
 
     public PlayerSetInfo currentPlayerInfo;
     public MonsterSetInfo currentMonsterInfo;
 
     public BattleUiManager buiManager;
 
+    // 전투 중 실제로 시작된 행동 수만 기록한다. 다단히트의 개별 타격 수와는 구분하며,
+    // 외부에서는 결과만 확인할 수 있도록 setter를 BattleManager 내부로 제한한다.
+    public int PlayerActionCount { get; private set; }
+    public int MonsterActionCount { get; private set; }
+
     //기습받음
     bool surprise = false;
+
+    // 자동전투 코루틴의 단일 실행 여부를 추적한다. 버튼을 빠르게 반복 호출하거나
+    // 여러 진입 경로가 겹쳐도 피해·로그·보상이 중복 처리되지 않게 한다.
+    private Coroutine autoBattleCoroutine;
 
     public class MonsterSetInfo
     {
@@ -149,9 +156,12 @@ public class BattleManager : MonoBehaviour
     /// </summary>
     public void ResetForNewRun()
     {
-        // 이전 런의 전투 코루틴과 임시 배율이 다음 런으로 넘어가지 않게 한다.
+        // 이전 런의 전투 코루틴이 다음 런의 피해나 보상 처리에 개입하지 않게 한다.
         StopAllCoroutines();
+        autoBattleCoroutine = null;
         surprise = false;
+        PlayerActionCount = 0;
+        MonsterActionCount = 0;
         currentPlayerInfo = null;
         currentMonsterInfo = null;
     }
@@ -159,24 +169,35 @@ public class BattleManager : MonoBehaviour
 
     public void BattleSetting(Monster_So monster_data)
     {
+        // 행동 카운트는 런 전체 누적값이 아니라 현재 전투 단위의 런타임 값이다.
+        PlayerActionCount = 0;
+        MonsterActionCount = 0;
+
         // 새로운 전투용 데이터 생성 (자동으로 값 할당됨)
         currentPlayerInfo = new PlayerSetInfo(GameManager.Instance.Context.player.stats);
 
-        //여기부터 적
-        //배율계산
-        float dmgCorrection = GameManager.Instance.Context.currentDay * statMultiplier;
-        // 둘 중 큰 값을 선택 (최솟값 1 보장)
-        dmgCorrection = Mathf.Max(1f, dmgCorrection);
-
-        // 1. 배율이 적용된 실제 데이터 계산
-        int finalHp = Mathf.RoundToInt(monster_data.maxHp * dmgCorrection);
-
-        // 2. UI에 전달할 정보 객체 생성
+        // 아직 일차별 난이도 규칙은 사용하지 않는다. MonsterSetInfo가
+        // Monster_So의 원본 전투 능력치를 그대로 복사하도록 유지한다.
         currentMonsterInfo = new MonsterSetInfo(monster_data);
 
-        // 3. UI 매니저에게 요청
+        // UI 매니저에게 요청
         buiManager.BattleUiSetting(currentMonsterInfo);
 
+    }
+
+    /// <summary>
+    /// 자동전투를 시작하는 유일한 진입점이다.
+    /// 이미 실행 중이라면 새 코루틴을 만들지 않아 피해와 보상이 중복되지 않게 한다.
+    /// </summary>
+    private void StartAutoBattle(float waittime = 0f)
+    {
+        if (autoBattleCoroutine != null)
+        {
+            Debug.LogWarning("[BattleManager] 이미 자동전투가 진행 중이므로 중복 실행을 무시합니다.");
+            return;
+        }
+
+        autoBattleCoroutine = StartCoroutine(AutoBattleRoutine(waittime));
     }
 
     IEnumerator AutoBattleRoutine(float waittime = 0f)
@@ -229,8 +250,11 @@ public class BattleManager : MonoBehaviour
         }
 
         // 3. 결과 처리
-      StartCoroutine(FinishBattle());
+        // 종료와 보상 처리가 끝날 때까지 이 자동전투 코루틴이 실행 중인 것으로 유지한다.
+        // 별도 코루틴으로 분리하지 않아 다음 전투가 보상 처리와 겹치는 상황을 막는다.
+        yield return FinishBattle();
         Debug.Log("배틀 종료");
+        autoBattleCoroutine = null;
     }
 
     private IEnumerator FinishBattle()
@@ -279,37 +303,122 @@ public class BattleManager : MonoBehaviour
 
     IEnumerator PlayerTurn()
     {
-        buiManager.AddLog($"<color=#99FF99>당신</color>의 공격!");
-        yield return new WaitForSeconds(0.5f);
-        // 데미지 계산 및 적용
-        //int damage = CalculateDamage(playerAtk);
-        int damage = Mathf.RoundToInt((currentPlayerInfo.addmg + currentPlayerInfo.buffad) * currentPlayerInfo.multad);
+        // 상대가 앞선 행동에서 이미 쓰러졌다면 행동 자체가 시작되지 않은 것이므로
+        // 카운트를 올리거나 공격 로그를 출력하지 않는다.
+        if (currentPlayerInfo == null || currentMonsterInfo == null ||
+            currentPlayerInfo.currentHp <= 0 || currentMonsterInfo.currentHp <= 0)
+        {
+            yield break;
+        }
 
-        currentMonsterInfo.currentHp = Mathf.Max(0, currentMonsterInfo.currentHp - damage);
-
-        buiManager.AddLog($"<color=red>{currentMonsterInfo.name}</color>에게 <color=red>{damage}</color>의 피해를 입혔다!");
-
-        // UI 업데이트 (DOTween 사용 권장)
-        buiManager.UpdateMonsterHP(currentMonsterInfo.currentHp);
-        buiManager.MonsterDamageEffect();
-
-        yield return new WaitForSeconds(0.8f);
+        PlayerActionCount++;
+        yield return ExecutePlayerAttack("<color=#99FF99>당신</color>의 공격!", 1f, 1);
     }
 
     IEnumerator MonsterTurn()
     {
-        buiManager.AddLog($"<color=red>{currentMonsterInfo.name}</color>의 공격!");
+        // 플레이어가 이미 쓰러졌거나 몬스터가 행동할 수 없는 상태라면
+        // 실제 행동이 아니므로 카운트에 포함하지 않는다.
+        if (currentPlayerInfo == null || currentMonsterInfo == null ||
+            currentPlayerInfo.currentHp <= 0 || currentMonsterInfo.currentHp <= 0)
+        {
+            yield break;
+        }
+
+        MonsterActionCount++;
+        yield return ExecuteMonsterAttack($"<color=red>{currentMonsterInfo.name}</color>의 공격!", 1f, 1);
+    }
+
+    /// <summary>
+    /// 플레이어와 몬스터가 함께 사용하는 방어력 기반 피해 공식이다.
+    /// 공격력이 없거나 배율 적용 후 피해가 양수가 아니면 0을 허용하며,
+    /// 양수 피해는 방어력 적용 및 반올림 후에도 최소 1을 보장한다.
+    /// </summary>
+    private int CalculateDamage(float attack, float defense, float damageMultiplier)
+    {
+        if (attack <= 0f)
+        {
+            return 0;
+        }
+
+        float rawDamage = attack * damageMultiplier;
+        if (rawDamage <= 0f)
+        {
+            return 0;
+        }
+
+        float appliedDefense = Mathf.Max(0f, defense);
+        float finalDamage = rawDamage / (1f + appliedDefense * 0.05f);
+        return Mathf.Max(1, Mathf.RoundToInt(finalDamage));
+    }
+
+    /// <summary>
+    /// 플레이어 공격 한 행동을 실행한다. 행동 로그는 한 번만 출력하고,
+    /// 각 타격마다 피해 계산·HP 반영·UI 갱신·피격 연출을 수행한다.
+    /// </summary>
+    private IEnumerator ExecutePlayerAttack(string actionName, float damageMultiplier, int hitCount)
+    {
+        buiManager.AddLog(actionName);
         yield return new WaitForSeconds(0.5f);
-        // 데미지 계산 및 적용
-        //int damage = CalculateDamage(playerAtk);
-        int damage = Mathf.RoundToInt((currentMonsterInfo.atk + currentMonsterInfo.buffatk) * currentMonsterInfo.multatk);
 
-        currentPlayerInfo.currentHp -= damage;
+        for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
+        {
+            float attack = (currentPlayerInfo.addmg + currentPlayerInfo.buffad) * currentPlayerInfo.multad;
+            float defense = (currentMonsterInfo.def + currentMonsterInfo.buffdef) * currentMonsterInfo.multdef;
+            int damage = CalculateDamage(attack, defense, damageMultiplier);
 
-        buiManager.AddLog($"<color=#99FF99>당신</color>에게 <color=red>{damage}</color>의 피해를 입혔다!");
-        // UI 업데이트
-        GameUiManager.Instance.UpdatePlayerHPUI_battle(currentPlayerInfo.currentHp);
-        buiManager.MonsterAttackEffect();
+            currentMonsterInfo.currentHp = Mathf.Max(0, currentMonsterInfo.currentHp - damage);
+            buiManager.AddLog($"<color=red>{currentMonsterInfo.name}</color>에게 <color=red>{damage}</color>의 피해를 입혔다!");
+            buiManager.UpdateMonsterHP(currentMonsterInfo.currentHp);
+            buiManager.MonsterDamageEffect();
+
+            // 대상이 쓰러지면 다단히트의 남은 타격과 타격 사이 대기를 생략한다.
+            if (currentMonsterInfo.currentHp <= 0)
+            {
+                break;
+            }
+
+            if (hitIndex < hitCount - 1)
+            {
+                yield return new WaitForSeconds(0.2f);
+            }
+        }
+
+        // 기본 공격 1타의 기존 전투 템포를 유지한다.
+        yield return new WaitForSeconds(0.8f);
+    }
+
+    /// <summary>
+    /// 몬스터 공격 한 행동을 실행한다. 플레이어 공격과 같은 피해 공식과
+    /// 다단히트 중단 규칙을 사용하되 기존 플레이어 HP UI와 공격 연출을 유지한다.
+    /// </summary>
+    private IEnumerator ExecuteMonsterAttack(string actionName, float damageMultiplier, int hitCount)
+    {
+        buiManager.AddLog(actionName);
+        yield return new WaitForSeconds(0.5f);
+
+        for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
+        {
+            float attack = (currentMonsterInfo.atk + currentMonsterInfo.buffatk) * currentMonsterInfo.multatk;
+            float defense = (currentPlayerInfo.defense + currentPlayerInfo.buffdef) * currentPlayerInfo.multdef;
+            int damage = CalculateDamage(attack, defense, damageMultiplier);
+
+            currentPlayerInfo.currentHp = Mathf.Max(0, currentPlayerInfo.currentHp - damage);
+            buiManager.AddLog($"<color=#99FF99>당신</color>에게 <color=red>{damage}</color>의 피해를 입혔다!");
+            GameUiManager.Instance.UpdatePlayerHPUI_battle(currentPlayerInfo.currentHp);
+            buiManager.MonsterAttackEffect();
+
+            // 플레이어가 쓰러졌다면 남은 타격을 실행하지 않아 로그와 연출도 중복되지 않는다.
+            if (currentPlayerInfo.currentHp <= 0)
+            {
+                break;
+            }
+
+            if (hitIndex < hitCount - 1)
+            {
+                yield return new WaitForSeconds(0.2f);
+            }
+        }
 
         yield return new WaitForSeconds(0.8f);
     }
@@ -322,7 +431,7 @@ public class BattleManager : MonoBehaviour
     public void BattleBtn()
     {
         Debug.Log("배틀 할당");
-        StartCoroutine(AutoBattleRoutine());
+        StartAutoBattle();
         buiManager.BattleBtnsOff();
     }
 
@@ -340,7 +449,7 @@ public class BattleManager : MonoBehaviour
         {
             buiManager.AddLog($"말이 통하는 상태가 아닌 것 같다..! \n적이 더 날뛰기 시작했다!");
             EnemyBurst(new Vector3(1.2f, 1.2f, 1.2f));
-            StartCoroutine(AutoBattleRoutine(1f));
+            StartAutoBattle(1f);
         }
 
         buiManager.BattleBtnsOff();
@@ -362,7 +471,7 @@ public class BattleManager : MonoBehaviour
         {
             buiManager.AddLog($"전투를 피할 순 없을 것 같다!");
             surprise = true;
-            StartCoroutine(AutoBattleRoutine(1f));
+            StartAutoBattle(1f);
         }
 
         buiManager.BattleBtnsOff();

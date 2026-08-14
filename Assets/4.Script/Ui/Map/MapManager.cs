@@ -22,12 +22,6 @@ public class MapManager : MonoBehaviour
 
     public bool isVertical;
 
-    [Header("기능 플래그")]
-    [Tooltip("상점 구현이 완료되기 전까지 절차 맵에서 상점 노드를 생성하지 않습니다.")]
-    public bool enableShop = false;
-
-    
-
     private void OnDestroy()
     {
         // GameManager와 MapManager는 같은 씬에 있지만 Unity의 파괴 순서는 보장되지 않는다.
@@ -52,7 +46,7 @@ public class MapManager : MonoBehaviour
 
 
         var nodeConverter = new GridToNodeConverter(width, height);
-        var nodeList = nodeConverter.ConvertToNodes(maps, isVertical, enableShop, spacingX, spacingY, offsetY, out MapNodeData startNode);
+        var nodeList = nodeConverter.ConvertToNodes(maps, isVertical, spacingX, spacingY, offsetY, out MapNodeData startNode);
 
         // 2. 연결 ID로 즉시 노드를 찾을 수 있도록 조회용 딕셔너리를 구성한다.
         Dictionary<int, MapNodeData> NodeDataById = new();

@@ -25,6 +25,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int initialMaxHp = 100;
     [SerializeField] private int initialMaxMp = 100;
     [SerializeField] private float initialAdAttack = 15f;
+    [SerializeField] private float initialSpeed = 5f;
 
     public bool canClick = false;
     public bool isGameOver= false;
@@ -212,6 +213,9 @@ public class GameManager : MonoBehaviour
         player.stats.baseAdAttack = character != null && character.startAtk > 0
             ? character.startAtk
             : initialAdAttack;
+        // CharacterData에는 아직 시작 속도 필드가 없으므로 이번 단계에서는
+        // 모든 캐릭터가 GameManager에 명시된 동일한 기본 속도로 새 런을 시작한다.
+        player.stats.baseSpeed = initialSpeed;
         player.Initialize();
 
         // 새 런에서 이어지면 안 되는 모든 런타임 상태를 한 번에 교체한다.

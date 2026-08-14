@@ -55,10 +55,42 @@ public class GameUiManager : MonoBehaviour
         // UI 참조는 씬 전용이므로 GameUiManager 자체도 씬과 함께 교체한다.
         Instance = this;
 
+        ConfigureTopHudSafeArea();
+
         // 화면 해상도의 너비를 가져옵니다.
         screenWidth = GameObject.Find("Canvas").GetComponent<RectTransform>().rect.width;
         // 시작 시 화면 오른쪽에 대기시킵니다.
         fadeImage.anchoredPosition = new Vector2(-2 * screenWidth, 0);
+    }
+
+    /// <summary>
+    /// 사용자가 만든 '상단 ui' 묶음에만 Android Safe Area 보정을 연결한다.
+    /// 기존 Top_Bar는 이 묶음의 자식으로 남으므로 붉은 피격 플래시와 내부 UI 배치는 유지된다.
+    /// </summary>
+    private void ConfigureTopHudSafeArea()
+    {
+        if (Top_Bar == null)
+        {
+            Debug.LogWarning("상단 HUD Safe Area 보정에 필요한 Top_Bar 참조가 없습니다.", this);
+            return;
+        }
+
+        RectTransform topHudRoot = Top_Bar.transform.parent as RectTransform;
+
+        // Top_Bar가 실수로 메인 패널 바로 아래로 돌아간 상태에서 부모를 이동하면 다른 UI까지
+        // 함께 움직일 수 있다. 정확히 '상단 ui' 묶음이 확인될 때만 컴포넌트를 추가한다.
+        if (topHudRoot == null || topHudRoot.name != "상단 ui")
+        {
+            Debug.LogWarning(
+                "상단 HUD Safe Area를 적용하지 못했습니다. Top_Bar의 부모 '상단 ui'를 확인하세요.",
+                this);
+            return;
+        }
+
+        if (topHudRoot.GetComponent<TopHudSafeArea>() == null)
+        {
+            topHudRoot.gameObject.AddComponent<TopHudSafeArea>();
+        }
     }
 
     private void OnDestroy()

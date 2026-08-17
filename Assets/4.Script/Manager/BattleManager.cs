@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class BattleManager : MonoBehaviour
@@ -11,6 +12,9 @@ public class BattleManager : MonoBehaviour
     public MonsterSetInfo currentMonsterInfo;
 
     public BattleUiManager buiManager;
+
+    // 현재 전투에서 사용하는 플레이어 스킬 상태
+    private readonly List<BattleSkillState> playerSkillStates = new();
 
     // 전투 중 실제로 시작된 행동 수만 기록한다. 다단히트의 개별 타격 수와는 구분하며,
     // 외부에서는 결과만 확인할 수 있도록 setter를 BattleManager 내부로 제한한다.
@@ -173,6 +177,15 @@ public class BattleManager : MonoBehaviour
         PlayerActionCount = 0;
         MonsterActionCount = 0;
 
+        // 이전 전투의 스킬 상태를 버리고 이번 전투용 상태를 새로 만든다.
+        playerSkillStates.Clear();
+
+        foreach (OwnedSkill ownedSkill in GameManager.Instance.Context.player.skills)
+        {
+            playerSkillStates.Add(new BattleSkillState(ownedSkill));
+        }
+
+
         // 새로운 전투용 데이터 생성 (자동으로 값 할당됨)
         currentPlayerInfo = new PlayerSetInfo(GameManager.Instance.Context.player.stats);
 
@@ -312,7 +325,53 @@ public class BattleManager : MonoBehaviour
         }
 
         PlayerActionCount++;
-        yield return ExecutePlayerAttack("<color=#99FF99>당신</color>의 공격!", 1f, 1);
+        Debug.Log($"플레이어 행동 횟수 : {PlayerActionCount}");
+
+        // 새 행동이 시작됐으므로 각 스킬의 행동 단위 발동 횟수를 초기화
+        foreach (BattleSkillState state in playerSkillStates)
+        {
+            state.ResetAction();
+        }
+
+
+        // 1. 턴 시작시 스킬 실행타이밍
+        List<BattleSkillState> turnStartSkills =
+            GetTriggeredSkills(SkillTrigger.TurnStart);
+        foreach (BattleSkillState state in turnStartSkills)
+        {
+            yield return ExecuteSkill(state, SkillTrigger.TurnStart);
+
+            // 턴 시작 스킬로 적이 죽었다면 이후 공격은 하지 않음
+            if (currentMonsterInfo.currentHp <= 0)
+            {
+                yield break;
+            }
+
+        }
+
+
+
+        // 2. 기존 기본공격 타이밍 처리
+        List<BattleSkillState> triggeredSkills =
+            GetTriggeredSkills(SkillTrigger.BasicAttack);
+
+        if (triggeredSkills.Count == 0)
+        {
+            yield return ExecutePlayerAttack("<color=#99FF99>당신</color>의 공격!", 1f, 1);
+
+        }
+        else
+        {
+            foreach (BattleSkillState state in triggeredSkills)
+            {
+                yield return ExecuteSkill(state, SkillTrigger.BasicAttack);
+
+                if (currentMonsterInfo.currentHp <= 0)
+                {
+                    break;
+                }
+            }
+        }
     }
 
     IEnumerator MonsterTurn()
@@ -387,6 +446,20 @@ public class BattleManager : MonoBehaviour
         // 기본 공격 1타의 기존 전투 템포를 유지한다.
         yield return new WaitForSeconds(0.8f);
     }
+
+    public IEnumerator ExecuteSkillAttack(
+    string skillName,
+    float damageMultiplier,
+    int hitCount)
+    {
+        // 스킬 이름을 행동 로그로 출력하면서
+        // 기존 플레이어 공격 처리에 그대로 넘긴다.
+        yield return ExecutePlayerAttack(
+            $"<color=#99FF99>{skillName}</color> 발동!",
+            damageMultiplier,
+            hitCount);
+    }
+
 
     /// <summary>
     /// 몬스터 공격 한 행동을 실행한다. 플레이어 공격과 같은 피해 공식과
@@ -486,6 +559,73 @@ public class BattleManager : MonoBehaviour
         currentMonsterInfo.currentHp = currentMonsterInfo.maxHp;
 
         buiManager.BattleUiRefresh();
+    }
+
+    /// <summary>
+    /// 현재 타이밍에서 조건을 만족한 스킬들을 찾는다.
+    /// 조건 판정은 여기서 한 번만 수행한다.
+    /// </summary>
+    private List<BattleSkillState> GetTriggeredSkills(SkillTrigger trigger)
+    {
+        List<BattleSkillState> triggeredSkills = new();
+
+        foreach (BattleSkillState state in playerSkillStates)
+        {
+            SkillData skill = state.Data;
+
+            // 현재 발생한 타이밍의 스킬만 검사
+            if (skill.trigger != trigger)
+            {
+                continue;
+            }
+
+            // 이 스킬의 행동당 최대 발동 횟수를 이미 채웠다면 제외
+            if (!state.CanActivateThisAction())
+            {
+                continue;
+            }
+
+            SkillContext context = new SkillContext(this, state, trigger);
+
+            // 레벨에 설정된 조건을 모두 검사
+            if (!skill.CanActive(context))
+            {
+                continue;
+            }
+
+            // 조건을 통과한 시점에 발동 횟수를 먼저 예약
+            state.ReserveActivation();
+
+            triggeredSkills.Add(state);
+        }
+
+        return triggeredSkills;
+    }
+
+    private IEnumerator ExecuteSkill(
+    BattleSkillState state,
+    SkillTrigger trigger)
+    {
+        SkillData skill = state.Data;
+        // 현재 스킬 레벨에 맞는 조건/효과 데이터를 가져온다.
+        SkillLevelData levelData = skill.GetLevelData(state.Level);
+
+        if (levelData == null)
+        {
+            yield break;
+        }
+
+        SkillContext context = new SkillContext(this, state, trigger);
+
+        // 현재 레벨에 등록된 효과를 순서대로 실행
+        foreach (SkillEffectBase effect in levelData.effects)
+        {
+            if (effect != null)
+            {
+                yield return effect.Execute(context);
+            }
+        }
+        state.MarkActivated();
     }
 
 }

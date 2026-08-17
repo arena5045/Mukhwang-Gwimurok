@@ -6438,6 +6438,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testDungeon: {fileID: 11400000, guid: 1ed0645f8f3fa3540b7e121baf43d5b2, type: 2}
+  testStartSkill: {fileID: 11400000, guid: 51c59f5b3bdeaaa479a54d1729763846, type: 2}
   initialMaxHp: 100
   initialMaxMp: 100
   initialAdAttack: 15
@@ -8359,8 +8360,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -74.05493, y: 744.66077}
-  m_SizeDelta: {x: -160.1171, y: 188.6784}
+  m_AnchoredPosition: {x: 0, y: -780}
+  m_SizeDelta: {x: 0, y: 188.678}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1049035188
 MonoBehaviour:
@@ -9867,9 +9868,9 @@ RectTransform:
   - {fileID: 676319812}
   m_Father: {fileID: 1334785918}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 391.6, y: -208.2}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: -68, y: -211}
   m_SizeDelta: {x: 110, y: 110}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1295438183
@@ -10195,7 +10196,7 @@ RectTransform:
   m_GameObject: {fileID: 1346099066}
   m_LocalRotation: {x: -0.023646977, y: -0, z: -0, w: 0.9997204}
   m_LocalPosition: {x: 0, y: 0, z: 2}
-  m_LocalScale: {x: 5.5, y: 4.5, z: 4}
+  m_LocalScale: {x: 6.5, y: 5.5, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1957548552}
@@ -10394,7 +10395,7 @@ RectTransform:
   m_GameObject: {fileID: 1406100782}
   m_LocalRotation: {x: -0.023646977, y: -0, z: -0, w: 0.9997204}
   m_LocalPosition: {x: 0, y: 0, z: 1}
-  m_LocalScale: {x: 5.5, y: 4.5, z: 4}
+  m_LocalScale: {x: 6.5, y: 5.5, z: 5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1957548552}

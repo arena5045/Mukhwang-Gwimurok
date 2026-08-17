@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d59b6c767153144ab5e5652e3d14d2, type: 3}
+  m_Name: "\uD608\uCC38"
+  m_EditorClassIdentifier: Assembly-CSharp::SkillData
+  skillName: "\uD608\uCC38"
+  skillDescription: "\uD53C\uAC00\uC5C6\uC5C9\n"
+  icon: {fileID: 21300000, guid: 44d2554f1f053354f885952debbbcf2d, type: 3}
+  trigger: 1
+  conditions:
+  - rid: 4748692158412226635
+  - rid: 4748692158412226636
+  effects:
+  - rid: 4748692133908578377
+  references:
+    version: 2
+    RefIds:
+    - rid: 4748692133908578377
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 5
+        hitCount: 1
+    - rid: 4748692158412226635
+      type: {class: HpBelowCondition, ns: , asm: Assembly-CSharp}
+      data:
+        hpRatio: 0.99
+    - rid: 4748692158412226636
+      type: {class: EveryNActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        interval: 3

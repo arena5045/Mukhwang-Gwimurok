@@ -21,6 +21,9 @@ public class GameManager : MonoBehaviour
     [Tooltip("Main 씬에서 던전을 선택하지 않았거나 Ingame 씬을 직접 실행했을 때 사용할 기본 던전입니다.")]
     public DungeonData testDungeon;
 
+    [Header("스킬 테스트")]
+    [SerializeField] private List<SkillData> testStartSkills = new();
+
     [Header("새 런 기본 능력치")]
     [SerializeField] private int initialMaxHp = 100;
     [SerializeField] private int initialMaxMp = 100;
@@ -218,6 +221,15 @@ public class GameManager : MonoBehaviour
         player.stats.baseSpeed = initialSpeed;
         player.Initialize();
 
+        //스킬 테스트용 코드
+        // 스킬 획득 시스템 구현 전까지 사용할 테스트용 시작 스킬
+        foreach (SkillData skill in testStartSkills)
+        {
+            if (skill != null)
+            {
+                player.skills.Add(new OwnedSkill(skill));
+            }
+        }
         // 새 런에서 이어지면 안 되는 모든 런타임 상태를 한 번에 교체한다.
         Context = new GameContext
         {

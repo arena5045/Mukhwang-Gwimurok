@@ -13,7 +13,7 @@ public class PlayerData
     public int gold = 0;
     public int soul = 0;
 
-
+    public List<OwnedSkill> skills = new List<OwnedSkill>();
     //public List<Item> inventory = new List<Item>();
     // public List<StatusEffect> statusEffects = new List<StatusEffect>();
 

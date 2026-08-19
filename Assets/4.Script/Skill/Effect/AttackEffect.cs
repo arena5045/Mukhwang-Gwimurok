@@ -26,6 +26,9 @@ public sealed class AttackEffect : SkillEffectBase
         yield return context.Battle.ExecuteSkillAttack(
             skillName,
             damageMultiplier,
-            hitCount);
+            hitCount,
+            context.Trigger,
+            context.State,
+            context.Chain);
     }
 }

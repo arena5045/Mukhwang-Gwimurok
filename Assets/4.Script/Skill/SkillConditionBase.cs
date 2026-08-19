@@ -53,3 +53,25 @@ public sealed class EveryNActionCondition : SkillConditionBase
                context.PlayerActionCount % interval == 0;
     }
 }
+
+// 직전에 적중한 스킬이 특정 태그를 가지고 있는지 검사
+[Serializable]
+public sealed class SourceSkillTagCondition : SkillConditionBase
+{
+    [LabelText("원본 스킬 태그")]
+    [EnumToggleButtons]
+    public SkillTag requiredTags;
+
+    public override bool IsMet(SkillContext context)
+    {
+        if (context.SourceSkill == null ||
+            requiredTags == SkillTag.None)
+        {
+            return false;
+        }
+
+        SkillTag sourceTags = context.SourceSkill.Data.tags;
+
+        return (sourceTags & requiredTags) == requiredTags;
+    }
+}

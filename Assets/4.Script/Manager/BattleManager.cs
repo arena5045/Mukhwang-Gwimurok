@@ -168,6 +168,8 @@ public class BattleManager : MonoBehaviour
         MonsterActionCount = 0;
         currentPlayerInfo = null;
         currentMonsterInfo = null;
+
+
     }
 
 
@@ -179,6 +181,7 @@ public class BattleManager : MonoBehaviour
 
         // 이전 전투의 스킬 상태를 버리고 이번 전투용 상태를 새로 만든다.
         playerSkillStates.Clear();
+
 
         foreach (OwnedSkill ownedSkill in GameManager.Instance.Context.player.skills)
         {
@@ -415,10 +418,17 @@ public class BattleManager : MonoBehaviour
     /// 플레이어 공격 한 행동을 실행한다. 행동 로그는 한 번만 출력하고,
     /// 각 타격마다 피해 계산·HP 반영·UI 갱신·피격 연출을 수행한다.
     /// </summary>
-    private IEnumerator ExecutePlayerAttack(string actionName, float damageMultiplier, int hitCount)
+    private IEnumerator ExecutePlayerAttack(
+        string actionName,
+        float damageMultiplier,
+        int hitCount,
+        float beforeHitDelay = 0.5f,
+        float afterAttackDelay = 0.8f,
+        BattleSkillState sourceSkill = null,
+        SkillChainContext chain = null)
     {
         buiManager.AddLog(actionName);
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(beforeHitDelay);
 
         for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
         {
@@ -430,6 +440,19 @@ public class BattleManager : MonoBehaviour
             buiManager.AddLog($"<color=red>{currentMonsterInfo.name}</color>에게 <color=red>{damage}</color>의 피해를 입혔다!");
             buiManager.UpdateMonsterHP(currentMonsterInfo.currentHp);
             buiManager.MonsterDamageEffect();
+
+            // 이 타격으로 적이 살아있다면 타격 후 스킬을 검사
+            if (currentMonsterInfo.currentHp > 0)
+            {
+                // 일반 공격에서 시작된 타격이면 새 연쇄를 만든다.
+                // 추가타가 만든 타격이면 기존 연쇄를 계속 사용한다.
+                SkillChainContext hitChain =
+                    chain ?? new SkillChainContext();
+
+                yield return ExecuteAfterHitChain(
+                    sourceSkill,
+                    hitChain);
+            }
 
             // 대상이 쓰러지면 다단히트의 남은 타격과 타격 사이 대기를 생략한다.
             if (currentMonsterInfo.currentHp <= 0)
@@ -444,20 +467,31 @@ public class BattleManager : MonoBehaviour
         }
 
         // 기본 공격 1타의 기존 전투 템포를 유지한다.
-        yield return new WaitForSeconds(0.8f);
+        yield return new WaitForSeconds(afterAttackDelay);
     }
 
     public IEnumerator ExecuteSkillAttack(
-    string skillName,
-    float damageMultiplier,
-    int hitCount)
+        string skillName,
+        float damageMultiplier,
+        int hitCount,
+        SkillTrigger trigger,
+        BattleSkillState sourceSkill,
+        SkillChainContext chain)
     {
-        // 스킬 이름을 행동 로그로 출력하면서
-        // 기존 플레이어 공격 처리에 그대로 넘긴다.
+        bool isChainAttack =
+            trigger == SkillTrigger.AfterHit;
+
+        float beforeHitDelay = isChainAttack ? 0.15f : 0.5f;
+        float afterAttackDelay = isChainAttack ? 0.1f : 0.8f;
+
         yield return ExecutePlayerAttack(
             $"<color=#99FF99>{skillName}</color> 발동!",
             damageMultiplier,
-            hitCount);
+            hitCount,
+            beforeHitDelay,
+            afterAttackDelay,
+            sourceSkill,
+            chain);
     }
 
 
@@ -603,8 +637,10 @@ public class BattleManager : MonoBehaviour
     }
 
     private IEnumerator ExecuteSkill(
-    BattleSkillState state,
-    SkillTrigger trigger)
+        BattleSkillState state,
+        SkillTrigger trigger,
+        BattleSkillState sourceSkill = null,
+        SkillChainContext chain = null)
     {
         SkillData skill = state.Data;
         // 현재 스킬 레벨에 맞는 조건/효과 데이터를 가져온다.
@@ -615,7 +651,14 @@ public class BattleManager : MonoBehaviour
             yield break;
         }
 
-        SkillContext context = new SkillContext(this, state, trigger);
+        SkillContext context =
+         new SkillContext(
+             this,
+             state,
+             trigger,
+             sourceSkill,
+             chain);
+
 
         // 현재 레벨에 등록된 효과를 순서대로 실행
         foreach (SkillEffectBase effect in levelData.effects)
@@ -626,6 +669,63 @@ public class BattleManager : MonoBehaviour
             }
         }
         state.MarkActivated();
+
+    }
+
+
+    private IEnumerator ExecuteAfterHitChain(
+    BattleSkillState sourceSkill,
+    SkillChainContext chain)
+    {
+        foreach (BattleSkillState state in playerSkillStates)
+        {
+            SkillData skill = state.Data;
+
+            if (skill.trigger != SkillTrigger.AfterHit)
+            {
+                continue;
+            }
+
+            // 이번 한 타격 연쇄에서 이미 등장한 스킬은 다시 등장 불가
+            if (chain.HasUsed(state))
+            {
+                continue;
+            }
+
+            // 행동 전체의 최대 발동 횟수도 유지
+            if (!state.CanActivateThisAction())
+            {
+                continue;
+            }
+
+            SkillContext context = new SkillContext(
+                this,
+                state,
+                SkillTrigger.AfterHit,
+                sourceSkill,
+                chain);
+
+            if (!skill.CanActive(context))
+            {
+                continue;
+            }
+
+            // 미리 전체를 예약하지 않고,
+            // 실제로 발동할 스킬 하나만 그 순간 기록한다.
+            chain.MarkUsed(state);
+            state.ReserveActivation();
+
+            yield return ExecuteSkill(
+                state,
+                SkillTrigger.AfterHit,
+                sourceSkill,
+                chain);
+
+            if (currentMonsterInfo.currentHp <= 0)
+            {
+                yield break;
+            }
+        }
     }
 
 }

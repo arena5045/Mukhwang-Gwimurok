@@ -34,6 +34,9 @@ public class BattleUiManager : MonoBehaviour
     // 전투 종료 버튼의 연속 입력으로 맵 복귀와 게임오버 코루틴이 중복 시작되는 것을 방지한다.
     private bool isExitingBattle;
 
+    // 피격 색상 Tween이 겹치지 않도록 현재 Tween을 기억
+    private Tween monsterDamageColorTween;
+
 
     // 외부(BattleManager 등)에서 이 함수를 호출해 로그를 쌓습니다.
 
@@ -233,15 +236,19 @@ private IEnumerator ScrollToBottom()
 
     public void MonsterDamageEffect()
     {
+        // 피격 연출: 좌우 흔들림
+        monsterSprite.transform.DOPunchPosition(
+            new Vector3(10, 0, 0),
+            0.5f,
+            10);
 
-        // 1. 피격 연출: 좌우로 강하게 흔들림 (PunchPosition)
-        // (강도, 시간, 진동횟수)
-        monsterSprite.transform.DOPunchPosition(new Vector3(10, 0, 0), 0.5f, 10);
+        // 이전 피격 색상 연출이 남아있다면 중단
+        monsterDamageColorTween?.Kill();
 
-        // 2. 붉은색 페이드 (깜빡임)
-        monsterSprite.DOColor(Color.red, 0.2f).SetLoops(2, LoopType.Yoyo);
-
-
+        // 항상 빨강에서 원래 색으로 돌아오게 한다.
+        monsterSprite.color = Color.red;
+        monsterDamageColorTween =
+            monsterSprite.DOColor(originColor, 0.2f);
     }
 
     // [연출 1] 몬스터가 쓰러질 때 (사망)

@@ -348,6 +348,47 @@ public class GameManager : MonoBehaviour
         return true; // 성공적으로 변경됨
     }
 
+    //경험치 추가
+    public void AddExp(int amount)
+    {
+        int levelUpCount = 0;
+
+        if (amount <= 0 || Context?.player == null)
+        {
+            return;
+        }
+
+        PlayerData player = Context.player;
+
+        int previousExp = player.currentExp;
+        int previousLevel = player.realmLevel;
+        int previousRequiredExp = player.GetRequiredExp();
+
+
+        player.currentExp += amount;
+
+        while (player.currentExp >= player.GetRequiredExp())
+        {
+            int requiredExp =
+                player.GetRequiredExp();
+
+            player.currentExp -= requiredExp;
+            player.realmLevel++;
+
+            levelUpCount++;
+
+            Debug.Log(
+                $"경지 상승! 현재 경지 : {player.realmLevel}");
+        }
+
+        GameUiManager.Instance?.AnimateExpGain(
+            previousExp,
+            previousLevel,
+            previousRequiredExp,
+            levelUpCount
+            );
+    }
+
 
     //배틀버튼 눌렀을 때 콜되는 함수
     public void Button_Battle()

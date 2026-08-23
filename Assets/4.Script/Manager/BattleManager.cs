@@ -36,16 +36,16 @@ public class BattleManager : MonoBehaviour
         public int currentHp;
 
         public float atk;
-        public float buffatk=0f;
-        public float multatk=1f;
+        public float buffatk = 0f;
+        public float multatk = 1f;
 
         public float def;
-        public float buffdef=0f;
-        public float multdef=1f;
+        public float buffdef = 0f;
+        public float multdef = 1f;
 
         public float speed;
-        public float buffspeed=0f;
-        public float multspeed=1f;
+        public float buffspeed = 0f;
+        public float multspeed = 1f;
 
         public float imgsize;
 
@@ -137,7 +137,7 @@ public class BattleManager : MonoBehaviour
         // 전투 UI 참조를 가진 매니저이므로 현재 게임 씬과 수명을 함께한다.
         instance = this;
 
-        if(buiManager ==null)
+        if (buiManager == null)
         {
             buiManager = GetComponent<BattleUiManager>();
         }
@@ -191,6 +191,9 @@ public class BattleManager : MonoBehaviour
 
         // 새로운 전투용 데이터 생성 (자동으로 값 할당됨)
         currentPlayerInfo = new PlayerSetInfo(GameManager.Instance.Context.player.stats);
+
+        //mp값 한번 갱신
+        GameUiManager.Instance.UpdatePlayerMPUI_battle(currentPlayerInfo.currentmp, false);
 
         // 아직 일차별 난이도 규칙은 사용하지 않는다. MonsterSetInfo가
         // Monster_So의 원본 전투 능력치를 그대로 복사하도록 유지한다.
@@ -276,17 +279,17 @@ public class BattleManager : MonoBehaviour
     private IEnumerator FinishBattle()
     {
         //이긴거
-       if(currentPlayerInfo.currentHp>0)
+        if (currentPlayerInfo.currentHp > 0)
         {
             buiManager.AddLog("전투에서 승리했다!");
             yield return new WaitForSeconds(0.5f);
-            int reward_gold =Mathf.RoundToInt(currentMonsterInfo.reward_gold * Random.Range(0.8f, 1.2f));
+            int reward_gold = Mathf.RoundToInt(currentMonsterInfo.reward_gold * Random.Range(0.8f, 1.2f));
             int reward_soul = Mathf.RoundToInt(currentMonsterInfo.reward_soul * Random.Range(0.8f, 1.2f));
 
             GameManager.Instance.ChangeGold(reward_gold);
             GameManager.Instance.ChangeSoul(reward_soul);
 
-            if(reward_gold >0)
+            if (reward_gold > 0)
             {
                 buiManager.AddLog($"금화 {reward_gold}개를 얻었다.");
                 yield return new WaitForSeconds(0.5f);
@@ -312,9 +315,9 @@ public class BattleManager : MonoBehaviour
 
     private IEnumerator FinishBattle(float waittime)
     {
-            yield return new WaitForSeconds(waittime);
+        yield return new WaitForSeconds(waittime);
 
-            buiManager.BattleEndUi_Open();
+        buiManager.BattleEndUi_Open();
     }
 
     IEnumerator PlayerTurn()
@@ -545,7 +548,7 @@ public class BattleManager : MonoBehaviour
     public void NegoBtn()
     {
         float negovalue = Random.Range(0f, 100f);
-        if(negovalue <= currentMonsterInfo.nego_pro)
+        if (negovalue <= currentMonsterInfo.nego_pro)
         {
             buiManager.AddLog($"");
             buiManager.AddLog($"");
@@ -603,6 +606,9 @@ public class BattleManager : MonoBehaviour
     {
         List<BattleSkillState> triggeredSkills = new();
 
+        // 같은 타이밍에 여러 스킬이 도력을 초과 예약하지 않게 함
+        int availableMp = currentPlayerInfo.currentmp;
+
         foreach (BattleSkillState state in playerSkillStates)
         {
             SkillData skill = state.Data;
@@ -619,6 +625,19 @@ public class BattleManager : MonoBehaviour
                 continue;
             }
 
+            SkillLevelData levelData = skill.GetLevelData(state.Level);
+
+            if (levelData == null)
+            {
+                continue;
+            }
+            // 남은 도력으로 비용을 낼 수 있는지 확인
+            if (availableMp < levelData.mpCost)
+            {
+                continue;
+            }
+
+
             SkillContext context = new SkillContext(this, state, trigger);
 
             // 레벨에 설정된 조건을 모두 검사
@@ -629,6 +648,8 @@ public class BattleManager : MonoBehaviour
 
             // 조건을 통과한 시점에 발동 횟수를 먼저 예약
             state.ReserveActivation();
+            //사용가능 도력도 차감
+            availableMp -= levelData.mpCost;
 
             triggeredSkills.Add(state);
         }
@@ -650,6 +671,20 @@ public class BattleManager : MonoBehaviour
         {
             yield break;
         }
+
+        // 실행 직전에도 도력이 충분한지 최종 확인
+        if (currentPlayerInfo.currentmp < levelData.mpCost)
+        {
+            yield break;
+        }
+
+        if (levelData.mpCost > 0)
+        {
+            currentPlayerInfo.currentmp -= levelData.mpCost;
+
+            GameUiManager.Instance.UpdatePlayerMPUI_battle(currentPlayerInfo.currentmp);
+        }
+
 
         SkillContext context =
          new SkillContext(
@@ -686,6 +721,20 @@ public class BattleManager : MonoBehaviour
                 continue;
             }
 
+            //마나 사용량 체크
+            SkillLevelData levelData = skill.GetLevelData(state.Level);
+
+            if (levelData == null)
+            {
+                continue;
+            }
+
+            if (currentPlayerInfo.currentmp < levelData.mpCost)
+            {
+                continue;
+            }
+
+
             // 이번 한 타격 연쇄에서 이미 등장한 스킬은 다시 등장 불가
             if (chain.HasUsed(state))
             {
@@ -709,6 +758,8 @@ public class BattleManager : MonoBehaviour
             {
                 continue;
             }
+            // 직전 타격 로그와 추가타 발동 로그가 겹치지 않게 잠깐 대기
+            yield return new WaitForSeconds(0.1f);
 
             // 미리 전체를 예약하지 않고,
             // 실제로 발동할 스킬 하나만 그 순간 기록한다.

@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 25d59b6c767153144ab5e5652e3d14d2, type: 3}
-  m_Name: "\uCD94\uAC00\uD0C0"
+  m_Name: "\uCD94\uAC00\uD0C0 1"
   m_EditorClassIdentifier: Assembly-CSharp::SkillData
-  skillName: "\uCD94\uAC00\uD0C0 aaa"
+  skillName: "\uCD94\uAC00\uD0C0 bbb"
   skillDescription: 
   icon: {fileID: 0}
   skillType: 1

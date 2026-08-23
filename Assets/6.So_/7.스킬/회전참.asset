@@ -33,7 +33,7 @@ MonoBehaviour:
     - rid: 4748692158412226641
       type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
       data:
-        damageMultiplier: 0.5
+        damageMultiplier: 0.25
         hitCount: 4
     - rid: 4748692158412226642
       type: {class: ChanceCondition, ns: , asm: Assembly-CSharp}

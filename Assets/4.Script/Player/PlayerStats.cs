@@ -10,6 +10,8 @@ public class PlayerStats
 
     public float baseSpeed;
 
+    public int luck;
+
     public float bonusAdFromItems;
     public float bonusApFromItems;
     public float bonusDefenseFromItems;

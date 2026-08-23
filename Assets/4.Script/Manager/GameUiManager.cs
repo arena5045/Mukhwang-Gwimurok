@@ -1,4 +1,5 @@
 using DG.Tweening;
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -25,6 +26,17 @@ public class GameUiManager : MonoBehaviour
 
     public TMP_Text playerGoldText;
     public TMP_Text playerSoulText;
+
+    [Header("경지")]
+    public Image playerExpBar;
+    public TMP_Text playerRealmText;
+
+    private Sequence expSequence;
+
+    [Header("경지 보상")]
+    [SerializeField]
+    private RealmRewardUI realmRewardUI;
+
 
     [Header("추가 요소들")]
     public GameObject gameOver_panel;
@@ -113,6 +125,14 @@ public class GameUiManager : MonoBehaviour
         {
             StartCoroutine(FadeOut());
         }
+        if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
+        {
+            GameManager.Instance.AddExp(30);
+        }
+        if (Keyboard.current != null && Keyboard.current.wKey.wasPressedThisFrame)
+        {
+            GameManager.Instance.AddExp(550);
+        }
 #endif
     }
 
@@ -120,20 +140,22 @@ public class GameUiManager : MonoBehaviour
     {
         GameContext context = GameManager.Instance.Context;
 
-        playerhpText.text = $"체력 : {context.player.currentHP}";
+        playerhpText.text = $"체력 : {context.player.currentHP} / {context.player.stats.MaxHp}";
         // 정수끼리 나누면 중간 체력이 모두 0으로 잘리므로 float로 변환한다.
         // 최대치가 잘못 설정된 콘텐츠도 0으로 나누지 않도록 별도로 방어한다.
         playerhpBar.fillAmount = context.player.stats.MaxHp > 0
             ? (float)context.player.currentHP / context.player.stats.MaxHp
             : 0f;
 
-        playempText.text = $"도력 : {context.player.currentMp}";
+        playempText.text = $"도력 : {context.player.currentMp} / {context.player.stats.MaxMp}";
         playermpBar.fillAmount = context.player.stats.MaxMp > 0
             ? (float)context.player.currentMp / context.player.stats.MaxMp
             : 0f;
 
         playerSoulText.text = context.player.soul.ToString();
         playerGoldText.text = context.player.gold.ToString();
+
+        UpdateExpUi();
     }
 
     public void UpdateGoldUi()
@@ -269,6 +291,101 @@ public class GameUiManager : MonoBehaviour
         int displayHp = Mathf.Max(0, current);
 
         playerhpText.text = $"체력 : {displayHp}";
+    }
+
+    public void UpdatePlayerMPUI_battle(
+    int current,
+    bool isSmooth = true)
+    {
+        int maxmp = BattleManager.instance.currentPlayerInfo.maxmp;
+
+        float targetFill =
+            maxmp > 0 ? (float)current / maxmp : 0f;
+
+        if (isSmooth)
+        {
+            playermpBar.DOFillAmount(targetFill, 0.3f);
+        }
+        else
+        {
+            playermpBar.fillAmount = targetFill;
+        }
+
+        playempText.text =
+            $"도력 : {Mathf.Max(0, current)}";
+    }
+
+    public void UpdateExpUi()
+    {
+        PlayerData player = GameManager.Instance.Context.player;
+
+        int requiredExp = player.GetRequiredExp();
+
+        playerExpBar.fillAmount =
+            (float)player.currentExp / requiredExp;
+
+        playerRealmText.text =
+            $"경지 {player.realmLevel}";
+    }
+
+public void AnimateExpGain(
+    int previousExp,
+    int previousLevel,
+    int previousRequiredExp,
+    int levelUpCount)
+    {
+        PlayerData player = GameManager.Instance.Context.player;
+
+        expSequence?.Kill();
+
+        float startFill =
+            previousRequiredExp > 0
+            ? (float)previousExp / previousRequiredExp
+            : 0f;
+
+        float targetFill =
+            (float)player.currentExp / player.GetRequiredExp();
+
+        playerExpBar.fillAmount = startFill;
+        playerRealmText.text = $"경지 {previousLevel}";
+
+        expSequence = DOTween.Sequence();
+
+        // 경지 상승이 없으면 그냥 현재 경험치까지 부드럽게 증가
+        if (levelUpCount == 0)
+        {
+            expSequence.Append(
+                playerExpBar.DOFillAmount(targetFill, 0.4f));
+
+        }
+
+        // 경지가 올랐다면 100%를 찍은 뒤 다음 경지로 넘어감
+        for (int i = 1; i <= levelUpCount; i++)
+        {
+            int displayLevel = previousLevel + i;
+
+            expSequence.Append(
+                playerExpBar.DOFillAmount(1f, 0.35f));
+
+            expSequence.AppendCallback(() =>
+            {
+                playerRealmText.text = $"경지 {displayLevel}";
+                playerExpBar.fillAmount = 0f;
+            });
+        }
+
+        // 초과 경험치를 다음 경지 게이지에 표시
+        expSequence.Append(
+            playerExpBar.DOFillAmount(targetFill, 0.35f));
+
+        //종료시 onComplete 콜백 호출
+        expSequence.OnComplete(() =>
+        {
+            if (levelUpCount > 0)
+            {
+                realmRewardUI.Open(levelUpCount);
+            }
+        });
     }
 
 }

@@ -358,25 +358,28 @@ public void AnimateExpGain(
                 playerExpBar.DOFillAmount(targetFill, 0.4f));
 
         }
-
-        // 경지가 올랐다면 100%를 찍은 뒤 다음 경지로 넘어감
-        for (int i = 1; i <= levelUpCount; i++)
-        {
-            int displayLevel = previousLevel + i;
-
-            expSequence.Append(
-                playerExpBar.DOFillAmount(1f, 0.35f));
-
-            expSequence.AppendCallback(() =>
+        else
+       {
+            // 경지가 올랐다면 100%를 찍은 뒤 다음 경지로 넘어감
+            for (int i = 1; i <= levelUpCount; i++)
             {
-                playerRealmText.text = $"경지 {displayLevel}";
-                playerExpBar.fillAmount = 0f;
-            });
-        }
+                int displayLevel = previousLevel + i;
 
-        // 초과 경험치를 다음 경지 게이지에 표시
-        expSequence.Append(
-            playerExpBar.DOFillAmount(targetFill, 0.35f));
+                expSequence.Append(
+                    playerExpBar.DOFillAmount(1f, 0.35f));
+
+                expSequence.AppendCallback(() =>
+                {
+                    playerRealmText.text = $"경지 {displayLevel}";
+                    playerExpBar.fillAmount = 0f;
+                });
+            }
+
+            // 초과 경험치를 다음 경지 게이지에 표시
+            expSequence.Append(
+                playerExpBar.DOFillAmount(targetFill, 0.35f));
+
+        }
 
         //종료시 onComplete 콜백 호출
         expSequence.OnComplete(() =>

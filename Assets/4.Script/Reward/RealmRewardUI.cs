@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class RealmRewardUI : MonoBehaviour
 {
-    //남은 수치
+    // 한 번에 여러 경지가 올랐을 때 아직 받아야 할 보상 선택 횟수
     private int pendingRewards;
 
 
@@ -71,11 +71,6 @@ public class RealmRewardUI : MonoBehaviour
             ShowChoices();
             return;
         }
-
-
-        // 변경된 스탯을 즉시 상단 UI에 반영
-        GameManager.Instance.RefreshPlayerUi();
-
 
         gameObject.SetActive(false);
 

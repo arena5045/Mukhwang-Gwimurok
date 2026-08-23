@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16ee5e3996f41294480729bbf1557fcd, type: 3}
   m_Name: RealmReward 3
   m_EditorClassIdentifier: Assembly-CSharp::RealmRewardData
-  rewardName: 
-  description: 
-  rarity: 0
+  rewardName: "\uD14C\uC2A4\uD2B8\uC6A9 4"
+  description: "\uBB34\uC0C1\uBB34\uB150"
+  rarity: 3
   icon: {fileID: 0}
   maxHp: 0
   maxMp: 0

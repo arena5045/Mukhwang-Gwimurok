@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d59b6c767153144ab5e5652e3d14d2, type: 3}
+  m_Name: "\uACFC\uBD80\uD558 \uD14C\uC2A4\uD2B8"
+  m_EditorClassIdentifier: Assembly-CSharp::SkillData
+  skillName: "\uACFC\uBD80\uD558 \uBC1C\uB3D9!"
+  skillDescription: 
+  icon: {fileID: 0}
+  skillType: 0
+  rarity: 0
+  tags: 0
+  trigger: 0
+  levels:
+  - mpCost: 0
+    maxActivationsPerAction: 1
+    conditions: []
+    effects:
+    - rid: 4748692322362064970
+  references:
+    version: 2
+    RefIds:
+    - rid: 4748692322362064970
+      type: {class: ModifyMpEffect, ns: , asm: Assembly-CSharp}
+      data:
+        currentMpAmount: 20
+        regenModifierAmount: -5

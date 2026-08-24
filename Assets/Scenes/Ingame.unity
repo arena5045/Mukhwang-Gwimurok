@@ -6899,9 +6899,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testDungeon: {fileID: 11400000, guid: 1ed0645f8f3fa3540b7e121baf43d5b2, type: 2}
   testStartSkills:
+  - {fileID: 11400000, guid: 5ce86b6c510f16546bcd8f5589fc53e5, type: 2}
   - {fileID: 11400000, guid: 9c111b2f775b922438227562c8a74d1f, type: 2}
-  - {fileID: 11400000, guid: 99f3cdb923a2fc94f99add3cf3ded7bf, type: 2}
-  - {fileID: 11400000, guid: 51c59f5b3bdeaaa479a54d1729763846, type: 2}
   initialMaxHp: 100
   initialMaxMp: 100
   initialAdAttack: 15

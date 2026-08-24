@@ -115,9 +115,8 @@ private IEnumerator ScrollToBottom()
         ClearLog();
         ResetMonsterVisual();
 
-        // UI만 새로 그리는 것이 아니라 현재 규칙에 따라 실제 플레이어 HP/MP도 회복한다.
-        // 상태 변경 책임은 GameManager에 두어 새 런 초기화와 UI 갱신 경로가 섞이지 않게 한다.
-        GameManager.Instance.RestorePlayerVitals();
+        // 전투에서 유지된 현재 체력을 상단 HUD에 반영한다.
+        GameManager.Instance.RefreshPlayerUi();
 
         GameUiManager.Instance.MapUiOpen(false);
 

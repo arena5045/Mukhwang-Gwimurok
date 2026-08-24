@@ -81,6 +81,10 @@ public class BattleManager : MonoBehaviour
         public int maxmp;
         public int currentmp;
 
+        // 이번 전투 동안 적용되는 도력 리젠 증감값
+        public int mpRegenModifier;
+
+
         public float addmg;
         public float buffad;
         public float multad;
@@ -97,17 +101,25 @@ public class BattleManager : MonoBehaviour
         public float buffspeed;
         public float multspeed;
 
-        public PlayerSetInfo(PlayerStats stats)
+        public PlayerSetInfo(PlayerData player)
         {
+            PlayerStats stats = player.stats;
+
             maxhp = stats.MaxHp;
-            currentHp = stats.MaxHp; // 전투 시작 시 풀피로 설정
+
+            // 전투마다 풀피로 만들지 않고 런에서 유지 중인 실제 체력을 가져온다.
+            currentHp = player.currentHP;
 
             maxmp = stats.MaxMp;
-            currentmp = stats.MaxMp; // 전투 시작 시 풀마나로 설정
+
+            // 도력은 행동마다 리필되는 전투 자원이므로 전투 시작 시 최대치로 시작한다.
+            currentmp = maxmp;
+
+            mpRegenModifier = 0;
 
             addmg = stats.TotalAdAttack;
-            buffad = 0;   // 버프는 전투 시작 시 0에서 시작
-            multad = 1f;  // 곱연산은 1배에서 시작
+            buffad = 0;
+            multad = 1f;
 
             apdmg = stats.TotalApAttack;
             buffap = 0;
@@ -190,7 +202,8 @@ public class BattleManager : MonoBehaviour
 
 
         // 새로운 전투용 데이터 생성 (자동으로 값 할당됨)
-        currentPlayerInfo = new PlayerSetInfo(GameManager.Instance.Context.player.stats);
+        currentPlayerInfo =
+            new PlayerSetInfo(GameManager.Instance.Context.player);
 
         //mp값 한번 갱신
         GameUiManager.Instance.UpdatePlayerMPUI_battle(currentPlayerInfo.currentmp, false);
@@ -281,6 +294,9 @@ public class BattleManager : MonoBehaviour
         //이긴거
         if (currentPlayerInfo.currentHp > 0)
         {
+            // 전투에서 남은 체력을 런의 실제 플레이어 체력으로 저장한다.
+            GameManager.Instance.Context.player.currentHP = currentPlayerInfo.currentHp;
+
             buiManager.AddLog("전투에서 승리했다!");
             yield return new WaitForSeconds(0.5f);
             int reward_gold = Mathf.RoundToInt(currentMonsterInfo.reward_gold * Random.Range(0.8f, 1.2f));
@@ -339,6 +355,23 @@ public class BattleManager : MonoBehaviour
             state.ResetAction();
         }
 
+        // 기본 리젠량은 최대 도력을 따르고,
+        // 전투 중 발생한 리젠 보정값을 추가로 적용한다.
+        int regenMp = Mathf.Clamp(
+            currentPlayerInfo.maxmp + currentPlayerInfo.mpRegenModifier,
+            0,
+            currentPlayerInfo.maxmp);
+
+        // 이전 행동에서 남은 도력은 이월하지 않고 새 행동의 도력으로 교체한다.
+        currentPlayerInfo.currentmp = regenMp;
+
+        GameUiManager.Instance.UpdatePlayerMPUI_battle(
+            currentPlayerInfo.currentmp);
+
+        Debug.Log(
+            $"도력 리필 : {currentPlayerInfo.currentmp} / {currentPlayerInfo.maxmp}" +
+            $" (리젠 보정 {currentPlayerInfo.mpRegenModifier})");
+
 
         // 1. 턴 시작시 스킬 실행타이밍
         List<BattleSkillState> turnStartSkills =
@@ -355,7 +388,8 @@ public class BattleManager : MonoBehaviour
 
         }
 
-
+        // 턴 시작 효과와 이어지는 기본공격 로그가 같은 순간에 뜨지 않게 짧게 구분
+        yield return new WaitForSeconds(0.1f);
 
         // 2. 기존 기본공격 타이밍 처리
         List<BattleSkillState> triggeredSkills =

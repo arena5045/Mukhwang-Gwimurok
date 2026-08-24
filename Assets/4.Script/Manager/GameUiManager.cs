@@ -51,8 +51,21 @@ public class GameUiManager : MonoBehaviour
     // 중복 실행되면 패널 활성 상태와 IsFading 해제 시점이 서로 어긋날 수 있다.
     private bool isClosingShop;
 
+    // 상단 HUD 색상 연출이 서로 겹치지 않도록 현재 Tween을 보관
+    private Tween topBarColorTween;
+
+    private Image topBarImage;
+    private Color topBarOriginColor;
+
     //인 게임에서 ui를 관리하는 싱글턴
     public static GameUiManager Instance { get; private set; }
+
+
+
+
+
+
+
 
     private void Awake()
     {
@@ -66,6 +79,16 @@ public class GameUiManager : MonoBehaviour
 
         // UI 참조는 씬 전용이므로 GameUiManager 자체도 씬과 함께 교체한다.
         Instance = this;
+
+        // 피해/회복 연출이 끝난 뒤 돌아갈 상단 HUD의 원래 색상을 저장
+        topBarImage = Top_Bar != null
+            ? Top_Bar.GetComponent<Image>()
+            : null;
+
+        if (topBarImage != null)
+        {
+            topBarOriginColor = topBarImage.color;
+        }
 
         ConfigureTopHudSafeArea();
 
@@ -107,6 +130,9 @@ public class GameUiManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        // GameUiManager가 사라질 때 진행 중인 HUD 색상 연출도 정리
+        topBarColorTween?.Kill();
+
         // 씬 종료 후 다른 코드가 파괴된 UI를 싱글턴으로 찾지 않도록 참조를 비운다.
         if (Instance == this)
         {
@@ -135,6 +161,44 @@ public class GameUiManager : MonoBehaviour
         }
 #endif
     }
+
+    // 상단 HUD를 잠깐 지정한 색으로 반짝인 뒤 원래 색으로 되돌린다.
+    private void FlashTopBar(
+        Color flashColor,
+        float duration = 0.12f)
+    {
+        if (topBarImage == null)
+        {
+            return;
+        }
+
+        // 이전 색상 연출이 남아있다면 끊고 원래 색에서 새 연출을 시작
+        topBarColorTween?.Kill();
+        topBarImage.color = topBarOriginColor;
+
+        topBarColorTween = topBarImage
+            .DOColor(flashColor, duration)
+            .SetLoops(2, LoopType.Yoyo)
+            .OnComplete(() =>
+            {
+                topBarImage.color = topBarOriginColor;
+            });
+    }
+
+    // 체력 회복용 초록빛
+    public void FlashHpGain()
+    {
+        FlashTopBar(
+            new Color(0.45f, 1f, 0.55f));
+    }
+
+    // 도력 회복/획득용 푸른빛
+    public void FlashMpGain()
+    {
+        FlashTopBar(
+            new Color(0.4f, 0.75f, 1f));
+    }
+
 
     public void RefreshUi()
     {
@@ -285,7 +349,9 @@ public class GameUiManager : MonoBehaviour
         // (강도, 시간, 진동횟수)
         playerhpBar.transform.DOPunchPosition(new Vector3(10, 0, 0), 0.5f, 10);
         // 2. 붉은색 페이드 (깜빡임)
-        Top_Bar.GetComponent<Image>().DOColor(Color.red, 0.2f).SetLoops(2, LoopType.Yoyo);
+        FlashTopBar(
+            Color.red,
+            0.2f);
 
         // 3. 텍스트 업데이트 (체력이 음수로 찍히지 않도록 방어)
         int displayHp = Mathf.Max(0, current);
@@ -359,8 +425,8 @@ public void AnimateExpGain(
 
         }
         else
-       {
-            // 경지가 올랐다면 100%를 찍은 뒤 다음 경지로 넘어감
+        {
+            // 경지가 올랐다면 이전 경지 게이지를 끝까지 채운 뒤 상승 연출
             for (int i = 1; i <= levelUpCount; i++)
             {
                 int displayLevel = previousLevel + i;
@@ -375,10 +441,12 @@ public void AnimateExpGain(
                 });
             }
 
-            // 초과 경험치를 다음 경지 게이지에 표시
-            expSequence.Append(
-                playerExpBar.DOFillAmount(targetFill, 0.35f));
-
+            // 최종 경지에서 남은 경험치가 있을 때만 표시
+            if (targetFill > 0f)
+            {
+                expSequence.Append(
+                    playerExpBar.DOFillAmount(targetFill, 0.35f));
+            }
         }
 
         //종료시 onComplete 콜백 호출

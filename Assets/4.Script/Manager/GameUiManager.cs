@@ -37,6 +37,10 @@ public class GameUiManager : MonoBehaviour
     [SerializeField]
     private RealmRewardUI realmRewardUI;
 
+    [Header("전투 스킬 보상")]
+    [SerializeField]
+    private BattleRewardUI battleRewardUI;
+
 
     [Header("추가 요소들")]
     public GameObject gameOver_panel;
@@ -472,6 +476,20 @@ public class GameUiManager : MonoBehaviour
         });
     }
 
+    // 전투 스킬 보상 UI를 열고 선택 완료 후 다음 작업을 이어간다.
+    public void OpenBattleReward(Action onComplete = null)
+    {
+        if (battleRewardUI == null)
+        {
+            Debug.LogError("전투 스킬 보상 UI가 연결되지 않았습니다.");
+
+            // UI 누락 때문에 전투 흐름 전체가 멈추지는 않게 한다.
+            onComplete?.Invoke();
+            return;
+        }
+
+        battleRewardUI.Open(onComplete);
+    }
 
 
     private void TestExpRewardFlowComplete()

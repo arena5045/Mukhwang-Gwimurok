@@ -1,4 +1,5 @@
 using Sirenix.OdinInspector;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,20 +11,30 @@ public class BattleRewardUI : MonoBehaviour
     [SerializeField]
     private BattleRewardOptionUI[] options;
 
-    public void Open()
+    // 스킬 보상 선택이 끝난 뒤 실행할 다음 작업
+    private Action onRewardSelected;
+
+
+    public void Open(Action onComplete = null)
     {
-        List<SkillData> rewards =
-            RollRewards();
+        List<SkillData> rewards = RollRewards();
 
         if (rewards == null)
         {
+            // 받을 스킬이 부족하면 이번 스킬 보상은 건너뛰고 다음 흐름으로 진행한다.
+            onComplete?.Invoke();
             return;
         }
+        // 이번 스킬 보상 선택이 끝난 뒤 실행할 작업을 기억해둔다.
+        onRewardSelected = onComplete;
 
-        // 추첨된 세 스킬을 각각의 보상 카드에 표시한다.
+
         for (int i = 0; i < 3; i++)
         {
-            options[i].Setup(rewards[i]);
+            // 카드가 선택되면 SelectReward가 호출되도록 같이 전달
+            options[i].Setup(
+                rewards[i],
+                SelectReward);
         }
 
         gameObject.SetActive(true);
@@ -83,6 +94,38 @@ public class BattleRewardUI : MonoBehaviour
             candidates[2]
         };
     }
+    private void SelectReward(SkillData skill)
+    {
+        PlayerData player =
+            GameManager.Instance.Context.player;
+
+        // 신규 스킬이면 Lv1 획득,
+        // 이미 보유 중이면 한 레벨 강화한다.
+        bool success =
+            player.AcquireOrLevelUpSkill(skill);
+
+        if (!success)
+        {
+            Debug.LogWarning(
+                $"스킬 보상 적용 실패 : {skill.skillName}");
+
+            return;
+        }
+
+        OwnedSkill ownedSkill =
+            player.GetOwnedSkill(skill);
+
+        Debug.Log(
+            $"전투 보상 선택 : {skill.skillName} Lv.{ownedSkill.level}");
+
+        gameObject.SetActive(false);
+
+        // 현재 완료 작업을 먼저 꺼내고 비운 뒤 한 번만 실행한다.
+        Action completeAction = onRewardSelected;
+        onRewardSelected = null;
+
+        completeAction?.Invoke();
+    }
 
     [Button("전투 스킬 후보 테스트")]
     private void TestRollRewards()
@@ -103,9 +146,16 @@ public class BattleRewardUI : MonoBehaviour
     }
 
 
-    [Button("전투 스킬 후보 테스트")]
-    private void TestRollRewards2()
+    [Button("전투 스킬 보상 완료 콜백 테스트")]
+    private void TestOpen()
     {
-        Open();
+        Open(TestComplete);
     }
+
+    private void TestComplete()
+    {
+        Debug.Log("전투 스킬 보상 처리 완료!");
+    }
+
+
 }

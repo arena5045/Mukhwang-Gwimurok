@@ -355,8 +355,15 @@ public class GameManager : MonoBehaviour
     {
         int levelUpCount = 0;
 
-        if (amount <= 0 || Context?.player == null)
+        if (Context?.player == null)
         {
+            return;
+        }
+
+        // EXP가 없어도 이후 보상 흐름은 계속 진행한다.
+        if (amount <= 0)
+        {
+            onComplete?.Invoke();
             return;
         }
 

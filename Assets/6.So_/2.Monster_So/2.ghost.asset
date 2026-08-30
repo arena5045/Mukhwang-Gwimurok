@@ -23,4 +23,5 @@ MonoBehaviour:
   runProbability: 70
   soul_drop: 10
   gold_drop: 1
+  exp_drop: 150
   dropTable: []

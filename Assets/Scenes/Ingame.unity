@@ -3220,7 +3220,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &390973444
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11109,6 +11109,7 @@ MonoBehaviour:
   playerExpBar: {fileID: 547524800}
   playerRealmText: {fileID: 54087722}
   realmRewardUI: {fileID: 807113508}
+  battleRewardUI: {fileID: 390973445}
   gameOver_panel: {fileID: 453386633}
   fadeImage: {fileID: 1346099067}
 --- !u!1 &1306448781

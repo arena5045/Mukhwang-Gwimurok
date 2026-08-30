@@ -190,6 +190,7 @@ MonoBehaviour:
   nameText: {fileID: 2573410334407806299}
   descriptionText: {fileID: 4572505536169554300}
   iconImage: {fileID: 3573090959627783628}
+  selectButton: {fileID: 551618320604163687}
 --- !u!1 &5003378413762523837
 GameObject:
   m_ObjectHideFlags: 0

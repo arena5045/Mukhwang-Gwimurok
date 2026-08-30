@@ -24,6 +24,7 @@ public class Monster_So : ScriptableObject
     [Header("드랍 아이템 리스트")]
     public int soul_drop;
     public int gold_drop;
+    public int exp_drop;
     public List<DropItem> dropTable; // 아이템과 확률을 담은 별도 클래스 일단 임시로 이거로 저장
 }
 

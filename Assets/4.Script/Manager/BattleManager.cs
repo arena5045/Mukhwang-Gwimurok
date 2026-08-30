@@ -54,6 +54,8 @@ public class BattleManager : MonoBehaviour
 
         public int reward_gold;
         public int reward_soul;
+        public int reward_exp;
+
         public MonsterSetInfo(Monster_So monster_data)
         {
             name = monster_data.monsterName;
@@ -70,6 +72,7 @@ public class BattleManager : MonoBehaviour
 
             reward_gold = monster_data.gold_drop;
             reward_soul = monster_data.soul_drop;
+            reward_exp = monster_data.exp_drop;
         }
     }
 
@@ -315,8 +318,38 @@ public class BattleManager : MonoBehaviour
                 buiManager.AddLog($"혼백 {reward_soul}개를 수급했다.");
                 yield return new WaitForSeconds(0.5f);
             }
+
+            bool rewardFlowComplete = false;
+
+            int reward_exp =
+                currentMonsterInfo.reward_exp;
+
+            if (reward_exp > 0)
+            {
+                buiManager.AddLog(
+                    $"수련도 {reward_exp}을 얻었다.");
+
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            // EXP → 경지 보상 → 스킬 보상 → 전투 종료 순으로 연결
+            GameManager.Instance.AddExp(
+                reward_exp,
+                () =>
+                {
+                    GameUiManager.Instance.OpenBattleReward(
+                        () =>
+                        {
+                            buiManager.BattleEndUi_Open();
+                            rewardFlowComplete = true;
+                        });
+                });
+
+            yield return new WaitUntil(
+                () => rewardFlowComplete);
+
             yield return new WaitForSeconds(0.5f);
-            buiManager.BattleEndUi_Open();
+            //buiManager.BattleEndUi_Open();
         }
         //진거
         else

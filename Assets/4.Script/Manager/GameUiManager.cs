@@ -153,11 +153,15 @@ public class GameUiManager : MonoBehaviour
         }
         if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
         {
-            GameManager.Instance.AddExp(30);
+            GameManager.Instance.AddExp(
+                30,
+                TestExpRewardFlowComplete);
         }
         if (Keyboard.current != null && Keyboard.current.wKey.wasPressedThisFrame)
         {
-            GameManager.Instance.AddExp(550);
+            GameManager.Instance.AddExp(
+                350,
+                TestExpRewardFlowComplete);
         }
 #endif
     }
@@ -394,11 +398,12 @@ public class GameUiManager : MonoBehaviour
             $"경지 {player.realmLevel}";
     }
 
-public void AnimateExpGain(
-    int previousExp,
-    int previousLevel,
-    int previousRequiredExp,
-    int levelUpCount)
+    public void AnimateExpGain(
+        int previousExp,
+        int previousLevel,
+        int previousRequiredExp,
+        int levelUpCount,
+        Action onComplete = null)
     {
         PlayerData player = GameManager.Instance.Context.player;
 
@@ -454,9 +459,25 @@ public void AnimateExpGain(
         {
             if (levelUpCount > 0)
             {
-                realmRewardUI.Open(levelUpCount);
+                // 경지가 올랐다면 모든 경지 보상을 고른 뒤 다음 작업을 실행한다.
+                realmRewardUI.Open(
+                    levelUpCount,
+                    onComplete);
+
+                return;
             }
+
+            // 경지 상승이 없다면 EXP 연출만으로 처리가 끝났으므로 바로 다음 작업 실행
+            onComplete?.Invoke();
         });
     }
+
+
+
+    private void TestExpRewardFlowComplete()
+    {
+        Debug.Log("EXP + 경지 보상 처리 전부 완료!");
+    }
+
 
 }

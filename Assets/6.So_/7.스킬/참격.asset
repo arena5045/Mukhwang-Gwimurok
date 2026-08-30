@@ -27,6 +27,10 @@ MonoBehaviour:
     - rid: 4748692158412226638
     effects:
     - rid: 4748692158412226639
+  - mpCost: 0
+    maxActivationsPerAction: 1
+    conditions: []
+    effects: []
   references:
     version: 2
     RefIds:

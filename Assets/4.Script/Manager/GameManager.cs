@@ -349,7 +349,9 @@ public class GameManager : MonoBehaviour
     }
 
     //경험치 추가
-    public void AddExp(int amount)
+    public void AddExp(
+        int amount,
+        Action onComplete = null)
     {
         int levelUpCount = 0;
 
@@ -385,8 +387,8 @@ public class GameManager : MonoBehaviour
             previousExp,
             previousLevel,
             previousRequiredExp,
-            levelUpCount
-            );
+            levelUpCount,
+            onComplete);
     }
 
 

@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d59b6c767153144ab5e5652e3d14d2, type: 3}
+  m_Name: "004.\uC794\uC601\uCC38"
+  m_EditorClassIdentifier: Assembly-CSharp::SkillData
+  skillName: "\uC794\uC601\uCC38"
+  skillDescription: "\uC801 \uD0C0\uACA9\uC2DC \uADF8\uB9BC\uC790\uAC00 \uACF5\uACA9\uD558\uC5EC
+    \uC57D\uD55C \uD53C\uD574\uB97C \uCD94\uAC00\uB85C \uC900\uB2E4"
+  icon: {fileID: 0}
+  skillType: 0
+  rarity: 0
+  tags: 192
+  trigger: 2
+  levels:
+  - mpCost: 5
+    maxActivationsPerAction: 3
+    conditions:
+    - rid: 7882403322454081547
+    effects:
+    - rid: 4748692187064565833
+  - mpCost: 5
+    maxActivationsPerAction: 3
+    conditions:
+    - rid: 7882403322454081548
+    effects:
+    - rid: 7882403322454081549
+  - mpCost: 5
+    maxActivationsPerAction: 3
+    conditions:
+    - rid: 7882403322454081550
+    effects:
+    - rid: 7882403322454081551
+  references:
+    version: 2
+    RefIds:
+    - rid: 4748692187064565833
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 0.2
+        hitCount: 1
+    - rid: 7882403322454081547
+      type: {class: ChanceCondition, ns: , asm: Assembly-CSharp}
+      data:
+        chance: 0.5
+    - rid: 7882403322454081548
+      type: {class: ChanceCondition, ns: , asm: Assembly-CSharp}
+      data:
+        chance: 0.75
+    - rid: 7882403322454081549
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 0.3
+        hitCount: 1
+    - rid: 7882403322454081550
+      type: {class: ChanceCondition, ns: , asm: Assembly-CSharp}
+      data:
+        chance: 1
+    - rid: 7882403322454081551
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 0.45
+        hitCount: 1

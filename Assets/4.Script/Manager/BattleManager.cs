@@ -340,16 +340,13 @@ public class BattleManager : MonoBehaviour
                     GameUiManager.Instance.OpenBattleReward(
                         () =>
                         {
-                            buiManager.BattleEndUi_Open();
                             rewardFlowComplete = true;
                         });
                 });
 
             yield return new WaitUntil(
                 () => rewardFlowComplete);
-
-            yield return new WaitForSeconds(0.5f);
-            //buiManager.BattleEndUi_Open();
+            buiManager.BattleEndUi_Open();
         }
         //진거
         else

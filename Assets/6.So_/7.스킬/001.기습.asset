@@ -10,36 +10,47 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 25d59b6c767153144ab5e5652e3d14d2, type: 3}
-  m_Name: "\uCC38\uACA9"
+  m_Name: "001.\uAE30\uC2B5"
   m_EditorClassIdentifier: Assembly-CSharp::SkillData
-  skillName: "\uCC38\uACA9"
-  skillDescription: " \uAE30\uBCF8 \uACF5\uACA9 \uC2DC \uC77C\uC815 \uD655\uB960\uB85C
-    \uB354 \uAC15\uD55C \uACF5\uACA9\uC744 \uD55C\uB2E4."
+  skillName: "\uAE30\uC2B5"
+  skillDescription: "\uD134 \uC2DC\uC791\uC2DC \uC57D\uD55C \uACF5\uACA9\uC744 \uC785\uD788\uACE0
+    \uC2DC\uC791\uD55C\uB2E4"
   icon: {fileID: 21300000, guid: 44d2554f1f053354f885952debbbcf2d, type: 3}
   skillType: 0
   rarity: 0
-  tags: 17
-  trigger: 1
+  tags: 1
+  trigger: 0
   levels:
   - mpCost: 0
     maxActivationsPerAction: 1
-    conditions:
-    - rid: 4748692158412226638
+    conditions: []
     effects:
-    - rid: 4748692158412226639
+    - rid: 7882403322454081536
   - mpCost: 0
     maxActivationsPerAction: 1
     conditions: []
-    effects: []
+    effects:
+    - rid: 7882403322454081537
+  - mpCost: 0
+    maxActivationsPerAction: 1
+    conditions: []
+    effects:
+    - rid: 7882403322454081538
   references:
     version: 2
     RefIds:
-    - rid: 4748692158412226638
-      type: {class: ChanceCondition, ns: , asm: Assembly-CSharp}
-      data:
-        chance: 1
-    - rid: 4748692158412226639
+    - rid: 7882403322454081536
       type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
       data:
-        damageMultiplier: 1.45
+        damageMultiplier: 0.25
+        hitCount: 1
+    - rid: 7882403322454081537
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 0.5
+        hitCount: 1
+    - rid: 7882403322454081538
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 1
         hitCount: 1

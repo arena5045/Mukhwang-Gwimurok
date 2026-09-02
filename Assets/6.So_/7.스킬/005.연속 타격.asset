@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d59b6c767153144ab5e5652e3d14d2, type: 3}
+  m_Name: "005.\uC5F0\uC18D \uD0C0\uACA9"
+  m_EditorClassIdentifier: Assembly-CSharp::SkillData
+  skillName: "\uC5F0\uC18D \uD0C0\uACA9"
+  skillDescription: "[\uD0C0\uACA9] \uD0DC\uADF8 \uC2A4\uD0AC\uC744 \uC801\uC5D0\uAC8C
+    \uC801\uC911\uC2DC \uC77C\uC815\uD655\uB960\uB85C \uC801\uC5D0\uAC8C \uCD94\uAC00\uD0C0\uB97C
+    \uC785\uD78C\uB2E4"
+  icon: {fileID: 0}
+  skillType: 0
+  rarity: 0
+  tags: 193
+  trigger: 2
+  levels:
+  - mpCost: 10
+    maxActivationsPerAction: 1
+    conditions:
+    - rid: 7882403322454081547
+    - rid: 7882403322454081552
+    effects:
+    - rid: 4748692187064565833
+  - mpCost: 10
+    maxActivationsPerAction: 1
+    conditions:
+    - rid: 7882403322454081553
+    - rid: 7882403322454081554
+    effects:
+    - rid: 7882403322454081555
+  - mpCost: 10
+    maxActivationsPerAction: 1
+    conditions:
+    - rid: 7882403322454081556
+    - rid: 7882403322454081557
+    effects:
+    - rid: 7882403322454081558
+  references:
+    version: 2
+    RefIds:
+    - rid: 4748692187064565833
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 0.5
+        hitCount: 1
+    - rid: 7882403322454081547
+      type: {class: ChanceCondition, ns: , asm: Assembly-CSharp}
+      data:
+        chance: 0.5
+    - rid: 7882403322454081552
+      type: {class: SourceSkillTagCondition, ns: , asm: Assembly-CSharp}
+      data:
+        requiredTags: 1
+    - rid: 7882403322454081553
+      type: {class: ChanceCondition, ns: , asm: Assembly-CSharp}
+      data:
+        chance: 0.6
+    - rid: 7882403322454081554
+      type: {class: SourceSkillTagCondition, ns: , asm: Assembly-CSharp}
+      data:
+        requiredTags: 1
+    - rid: 7882403322454081555
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 0.75
+        hitCount: 1
+    - rid: 7882403322454081556
+      type: {class: ChanceCondition, ns: , asm: Assembly-CSharp}
+      data:
+        chance: 0.7
+    - rid: 7882403322454081557
+      type: {class: SourceSkillTagCondition, ns: , asm: Assembly-CSharp}
+      data:
+        requiredTags: 1
+    - rid: 7882403322454081558
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 1
+        hitCount: 1

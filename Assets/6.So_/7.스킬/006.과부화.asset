@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 25d59b6c767153144ab5e5652e3d14d2, type: 3}
-  m_Name: "\uACFC\uBD80\uD558 \uD14C\uC2A4\uD2B8"
+  m_Name: "006.\uACFC\uBD80\uD654"
   m_EditorClassIdentifier: Assembly-CSharp::SkillData
-  skillName: "\uACFC\uBD80\uD558 \uBC1C\uB3D9!"
-  skillDescription: 
+  skillName: "\uACFC\uBD80\uD558"
+  skillDescription: "\uD134\uC2DC\uC791\uC2DC \uCD94\uAC00 \uB3C4\uB825\uC744 \uC5BB\uC9C0\uB9CC,
+    \uB9E4 \uD134 \uB3C4\uB825 \uB9AC\uC820\uC774 \uAC10\uC18C\uD55C\uB2E4"
   icon: {fileID: 0}
   skillType: 0
   rarity: 0
@@ -28,7 +29,8 @@ MonoBehaviour:
   - mpCost: 0
     maxActivationsPerAction: 1
     conditions: []
-    effects: []
+    effects:
+    - rid: 7882403322454081559
   references:
     version: 2
     RefIds:
@@ -36,4 +38,9 @@ MonoBehaviour:
       type: {class: ModifyMpEffect, ns: , asm: Assembly-CSharp}
       data:
         currentMpAmount: 20
+        regenModifierAmount: -5
+    - rid: 7882403322454081559
+      type: {class: ModifyMpEffect, ns: , asm: Assembly-CSharp}
+      data:
+        currentMpAmount: 30
         regenModifierAmount: -5

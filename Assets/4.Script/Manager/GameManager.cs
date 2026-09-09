@@ -29,6 +29,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int initialMaxMp = 100;
     [SerializeField] private float initialAdAttack = 15f;
     [SerializeField] private float initialSpeed = 5f;
+    [SerializeField] private int initialHpRegen = 6;
 
     public bool canClick = false;
     public bool isGameOver= false;
@@ -213,6 +214,7 @@ public class GameManager : MonoBehaviour
             ? character.startHp
             : initialMaxHp;
         player.stats.MaxMp = initialMaxMp;
+        player.stats.hpRegen = initialHpRegen;
         player.stats.baseAdAttack = character != null && character.startAtk > 0
             ? character.startAtk
             : initialAdAttack;

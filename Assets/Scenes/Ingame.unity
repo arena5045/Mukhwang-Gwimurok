@@ -3254,11 +3254,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleRewardUI
   rewardPool:
-  - {fileID: 11400000, guid: e103ff44e8fe97541a88ec63f10c04cf, type: 2}
-  - {fileID: 11400000, guid: 5ce86b6c510f16546bcd8f5589fc53e5, type: 2}
   - {fileID: 11400000, guid: 0fb78313bd1dfca45ab135f87f2e49be, type: 2}
-  - {fileID: 11400000, guid: 51c59f5b3bdeaaa479a54d1729763846, type: 2}
+  - {fileID: 11400000, guid: 9c111b2f775b922438227562c8a74d1f, type: 2}
+  - {fileID: 11400000, guid: e103ff44e8fe97541a88ec63f10c04cf, type: 2}
   - {fileID: 11400000, guid: 99f3cdb923a2fc94f99add3cf3ded7bf, type: 2}
+  - {fileID: 11400000, guid: b60a7a3d12e513144974bb720b3fea5a, type: 2}
+  - {fileID: 11400000, guid: 5ce86b6c510f16546bcd8f5589fc53e5, type: 2}
+  - {fileID: 11400000, guid: a6cfcf520dea9684fa8f4e87e64ebb48, type: 2}
+  - {fileID: 11400000, guid: 51c59f5b3bdeaaa479a54d1729763846, type: 2}
+  - {fileID: 11400000, guid: 0f44880cc38931b43988e9fe086a771e, type: 2}
+  - {fileID: 11400000, guid: b5fea0bcdeef94948abfbb216cb5ad28, type: 2}
+  - {fileID: 11400000, guid: bb73715c56fa066499ffbf05aa7eaccc, type: 2}
+  - {fileID: 11400000, guid: 9db7e234f1f8f8845a1a2d9f55a6d64a, type: 2}
+  - {fileID: 11400000, guid: 349001179c41ebe4bb7880a9d5e5c7b3, type: 2}
   options:
   - {fileID: 6073870180711942147}
   - {fileID: 2066966469}

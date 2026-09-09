@@ -3,6 +3,9 @@ public class PlayerStats
     public int MaxHp;
     public int MaxMp;
 
+    // 전투 승리 후 회복하는 고정 체력량
+    public int hpRegen;
+
     public float baseAdAttack;
     public float baseApAttack;
 

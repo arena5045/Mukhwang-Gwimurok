@@ -296,12 +296,42 @@ public class BattleManager : MonoBehaviour
     {
         //이긴거
         if (currentPlayerInfo.currentHp > 0)
-        {
+        {   
+            //플레이어 데이터 가져오기
+            PlayerData player =
+            GameManager.Instance.Context.player;
+
             // 전투에서 남은 체력을 런의 실제 플레이어 체력으로 저장한다.
             GameManager.Instance.Context.player.currentHP = currentPlayerInfo.currentHp;
 
             buiManager.AddLog("전투에서 승리했다!");
             yield return new WaitForSeconds(0.5f);
+
+            //체력회복구간
+            int previousHp = player.currentHP;
+
+            player.Heal(player.stats.hpRegen);
+
+            int healedAmount =
+                player.currentHP - previousHp;
+
+            // 다음 처리에서도 회복된 체력을 사용하도록 전투 데이터와 맞춘다.
+            currentPlayerInfo.currentHp =
+                player.currentHP;
+
+            if (healedAmount > 0)
+            {
+                GameUiManager.Instance.UpdatePlayerHPUI_battle(
+                    currentPlayerInfo.currentHp);
+
+                GameUiManager.Instance.FlashHpGain();
+
+                buiManager.AddLog(
+                    $"체력을 <color=#99FF99>{healedAmount}</color> 회복했다.");
+
+                yield return new WaitForSeconds(0.5f);
+            }
+
             int reward_gold = Mathf.RoundToInt(currentMonsterInfo.reward_gold * Random.Range(0.8f, 1.2f));
             int reward_soul = Mathf.RoundToInt(currentMonsterInfo.reward_soul * Random.Range(0.8f, 1.2f));
 

@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: "007.\uCD95\uAE30"
   m_EditorClassIdentifier: Assembly-CSharp::SkillData
   skillName: "\uCD95\uAE30"
-  skillDescription: "\uC77C\uC815 \uD134\uB9C8\uB2E4 \uB3C4\uB825\uD68C\uBCF5\uB7C9\uC744
-    \uC99D\uAC00\uC2DC\uD0A8\uB2E4."
+  skillDescription: "\uC77C\uC815 \uD589\uB3D9\uB9C8\uB2E4 \uB3C4\uB825\uC744 \uBAA8\uC544
+    \uCD5C\uB300\uCE58\uB97C \uCD08\uACFC\uD558\uB294 \uCD94\uAC00 \uB3C4\uB825\uC744
+    \uC5BB\uB294\uB2E4"
   icon: {fileID: 0}
   skillType: 0
   rarity: 0
@@ -45,8 +46,8 @@ MonoBehaviour:
     - rid: 4748692322362064970
       type: {class: ModifyMpEffect, ns: , asm: Assembly-CSharp}
       data:
-        currentMpAmount: 0
-        regenModifierAmount: 10
+        currentMpAmount: 40
+        regenModifierAmount: 0
     - rid: 7882403322454081560
       type: {class: EveryNActionCondition, ns: , asm: Assembly-CSharp}
       data:
@@ -58,8 +59,8 @@ MonoBehaviour:
     - rid: 7882403322454081562
       type: {class: ModifyMpEffect, ns: , asm: Assembly-CSharp}
       data:
-        currentMpAmount: 0
-        regenModifierAmount: 20
+        currentMpAmount: 50
+        regenModifierAmount: 0
     - rid: 7882403322454081563
       type: {class: EveryNActionCondition, ns: , asm: Assembly-CSharp}
       data:
@@ -67,5 +68,5 @@ MonoBehaviour:
     - rid: 7882403322454081564
       type: {class: ModifyMpEffect, ns: , asm: Assembly-CSharp}
       data:
-        currentMpAmount: 0
-        regenModifierAmount: 25
+        currentMpAmount: 60
+        regenModifierAmount: 0

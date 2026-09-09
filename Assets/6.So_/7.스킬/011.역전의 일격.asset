@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25d59b6c767153144ab5e5652e3d14d2, type: 3}
   m_Name: "011.\uC5ED\uC804\uC758 \uC77C\uACA9"
   m_EditorClassIdentifier: Assembly-CSharp::SkillData
-  skillName: "\uD608\uCC38"
-  skillDescription: "\uCCB4\uB825\uC774 \uC801\uC744\uB54C \uB0AE\uC740 \uD655\uB960\uB85C
-    \uB192\uC740 \uB370\uBBF8\uC9C0\uB97C \uC900\uB2E4"
+  skillName: "\uC5ED\uC804\uC758 \uC77C\uACA9"
+  skillDescription: "\uCCB4\uB825\uC774 \uC801\uC744\uB54C  \uD134 \uC2DC\uC791\uC2DC\uB0AE\uC740
+    \uD655\uB960\uB85C \uB192\uC740 \uB370\uBBF8\uC9C0\uB97C \uC900\uB2E4"
   icon: {fileID: 21300000, guid: 44d2554f1f053354f885952debbbcf2d, type: 3}
   skillType: 0
   rarity: 0

@@ -21,6 +21,13 @@ public class BattleManager : MonoBehaviour
     public int PlayerActionCount { get; private set; }
     public int MonsterActionCount { get; private set; }
 
+    // 플레이어가 한 턴 동안 사용할 수 있는 행동력
+    [SerializeField] private int maxActionPoints = 5;
+
+    public int CurrentActionPoints { get; private set; }
+    public int MaxActionPoints => maxActionPoints;
+
+
     //기습받음
     bool surprise = false;
 
@@ -179,11 +186,13 @@ public class BattleManager : MonoBehaviour
         StopAllCoroutines();
         autoBattleCoroutine = null;
         surprise = false;
+
         PlayerActionCount = 0;
         MonsterActionCount = 0;
+        CurrentActionPoints = 0;
+
         currentPlayerInfo = null;
         currentMonsterInfo = null;
-
 
     }
 
@@ -193,6 +202,7 @@ public class BattleManager : MonoBehaviour
         // 행동 카운트는 런 전체 누적값이 아니라 현재 전투 단위의 런타임 값이다.
         PlayerActionCount = 0;
         MonsterActionCount = 0;
+        CurrentActionPoints = 0;
 
         // 이전 전투의 스킬 상태를 버리고 이번 전투용 상태를 새로 만든다.
         playerSkillStates.Clear();
@@ -321,7 +331,7 @@ public class BattleManager : MonoBehaviour
 
             if (healedAmount > 0)
             {
-                GameUiManager.Instance.UpdatePlayerHPUI_battle(
+                GameUiManager.Instance.UpdatePlayerHPUI_heal(
                     currentPlayerInfo.currentHp);
 
                 GameUiManager.Instance.FlashHpGain();
@@ -412,8 +422,16 @@ public class BattleManager : MonoBehaviour
         // 새 행동이 시작됐으므로 각 스킬의 행동 단위 발동 횟수를 초기화
         foreach (BattleSkillState state in playerSkillStates)
         {
-            state.ResetAction();
+            state.BeginPlayerTurn();
         }
+
+        // 새 플레이어 턴마다 행동력을 최대치로 회복
+        CurrentActionPoints = maxActionPoints;
+
+        Debug.Log(
+            $"행동력 : {CurrentActionPoints} / {maxActionPoints}");
+
+
 
         // 기본 리젠량은 최대 도력을 따르고,
         // 전투 중 발생한 리젠 보정값을 추가로 적용한다.
@@ -690,6 +708,24 @@ public class BattleManager : MonoBehaviour
         currentMonsterInfo.currentHp = currentMonsterInfo.maxHp;
 
         buiManager.BattleUiRefresh();
+    }
+
+    //행동력 소모 함수
+    public bool TrySpendActionPoints(int amount)
+    {
+        if (amount < 0)
+        {
+            return false;
+        }
+
+        if (CurrentActionPoints < amount)
+        {
+            return false;
+        }
+
+        CurrentActionPoints -= amount;
+        return true;
+
     }
 
     /// <summary>

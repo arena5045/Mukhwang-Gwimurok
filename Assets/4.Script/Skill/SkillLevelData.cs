@@ -14,6 +14,18 @@ public class SkillLevelData
     [MinValue(1)]
     public int maxActivationsPerAction = 1;
 
+    [LabelText("행동력 비용")]
+    [MinValue(0)]
+    public int actionPointCost = 1;
+
+    [LabelText("쿨타임")]
+    [MinValue(0)]
+    public int cooldownTurns = 0;
+
+    [LabelText("시작 쿨타임")]
+    [MinValue(0)]
+    public int initialCooldownTurns = 0;
+
     [LabelText("발동 조건")]
     [SerializeReference]
     public List<SkillConditionBase> conditions = new();

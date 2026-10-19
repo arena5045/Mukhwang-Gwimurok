@@ -367,6 +367,29 @@ public class GameUiManager : MonoBehaviour
         playerhpText.text = $"체력 : {displayHp}";
     }
 
+    //hp 회복시
+    public void UpdatePlayerHPUI_heal(
+    int current,
+    bool isSmooth = true)
+    {
+        int maxhp = BattleManager.instance.currentPlayerInfo.maxhp;
+
+        float targetFill =
+            maxhp > 0 ? (float)current / maxhp : 0f;
+
+        if (isSmooth)
+        {
+            playerhpBar.DOFillAmount(targetFill, 0.5f);
+        }
+        else
+        {
+            playerhpBar.fillAmount = targetFill;
+        }
+
+        playerhpText.text =
+            $"체력 : {Mathf.Max(0, current)}";
+    }
+
     public void UpdatePlayerMPUI_battle(
     int current,
     bool isSmooth = true)

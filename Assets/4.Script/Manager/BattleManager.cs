@@ -427,11 +427,24 @@ public class BattleManager : MonoBehaviour
 
         // 새 플레이어 턴마다 행동력을 최대치로 회복
         CurrentActionPoints = maxActionPoints;
-
+            
         Debug.Log(
             $"행동력 : {CurrentActionPoints} / {maxActionPoints}");
 
+        //사용가능한 스킬 가져오기
+        List<BattleSkillState> usableActiveSkills = GetUsableActiveSkills();
 
+        //로그 확인용
+        foreach (BattleSkillState state in usableActiveSkills)
+        {
+            SkillLevelData levelData =
+                state.Data.GetLevelData(state.Level);
+
+            Debug.Log(
+                $"사용 가능 액티브 : {state.Data.skillName}" +
+                $" / 행동력 {levelData.actionPointCost}" +
+                $" / 쿨타임 {state.CooldownRemaining}");
+        }
 
         // 기본 리젠량은 최대 도력을 따르고,
         // 전투 중 발생한 리젠 보정값을 추가로 적용한다.
@@ -728,6 +741,46 @@ public class BattleManager : MonoBehaviour
 
     }
 
+
+    public List<BattleSkillState> GetUsableActiveSkills()
+    {
+        List<BattleSkillState> usableSkills = new();
+
+        foreach (BattleSkillState state in playerSkillStates)
+        {
+            SkillData skill = state.Data;
+
+            if (skill == null)
+            {
+                continue;
+            }
+
+
+            SkillLevelData levelData = skill.GetLevelData(state.Level);
+
+            if(levelData == null)
+            {
+                continue;
+            }
+
+            // 이번 턴에 이미 사용했거나 쿨타임 중이면 제외
+            if (!state.CanUseActive())
+            {
+                continue;
+            }
+
+            // 남은 행동력으로 사용할 수 없는 스킬은 제외
+            if (CurrentActionPoints < levelData.actionPointCost)
+            {
+                continue;
+            }
+
+            usableSkills.Add(state);
+
+        }
+        return usableSkills;
+
+    }
     /// <summary>
     /// 현재 타이밍에서 조건을 만족한 스킬들을 찾는다.
     /// 조건 판정은 여기서 한 번만 수행한다.

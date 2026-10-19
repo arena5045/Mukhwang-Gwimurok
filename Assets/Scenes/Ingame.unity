@@ -1423,6 +1423,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   test_so: {fileID: 11400000, guid: 41cff044997a5784c8e2bdbe6816b465, type: 2}
   buiManager: {fileID: 148776838}
+  maxActionPoints: 5
 --- !u!4 &148776840
 Transform:
   m_ObjectHideFlags: 0
@@ -7320,11 +7321,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testDungeon: {fileID: 11400000, guid: 1ed0645f8f3fa3540b7e121baf43d5b2, type: 2}
-  testStartSkills: []
+  testStartSkills:
+  - {fileID: 11400000, guid: ef3e0095ce6764c4b8f28cd0a702378f, type: 2}
+  - {fileID: 11400000, guid: d201f18f520ce1d4dad7b1238e2bd84e, type: 2}
+  - {fileID: 11400000, guid: d75530083d7b3d045ad145f333478758, type: 2}
   initialMaxHp: 100
   initialMaxMp: 100
   initialAdAttack: 15
   initialSpeed: 5
+  initialHpRegen: 6
   canClick: 1
   isGameOver: 0
 --- !u!4 &684634084

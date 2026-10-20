@@ -18,7 +18,7 @@ MonoBehaviour:
   skillType: 0
   rarity: 0
   tags: 132
-  trigger: 1
+  trigger: 0
   levels:
   - mpCost: 20
     maxActivationsPerAction: 1

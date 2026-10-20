@@ -1,6 +1,9 @@
 using Sirenix.OdinInspector;
 public enum SkillTrigger
 {
+    [LabelText("직접 사용")]
+    Manual,
+
     [LabelText("턴 시작")]
     TurnStart,
 

@@ -434,6 +434,15 @@ public class BattleManager : MonoBehaviour
         //사용가능한 스킬 가져오기
         List<BattleSkillState> usableActiveSkills = GetUsableActiveSkills();
 
+        //테스트용
+        if (usableActiveSkills.Count > 0)
+        {
+            yield return UseManualSkillRoutine(
+                usableActiveSkills[0]);
+
+            // 테스트 중에는 기존 자동 공격 로직으로 내려가지 않는다.
+            yield break;
+        }
         //로그 확인용
         foreach (BattleSkillState state in usableActiveSkills)
         {
@@ -741,6 +750,63 @@ public class BattleManager : MonoBehaviour
 
     }
 
+    // 사용스킬 시전시
+    public void UseManualSkill(BattleSkillState state)
+    {
+        if (state == null)
+        {
+            return;
+        }
+
+        StartCoroutine(UseManualSkillRoutine(state));
+    }
+
+    private IEnumerator UseManualSkillRoutine(
+    BattleSkillState state)
+    {
+        SkillData skill = state.Data;
+
+        //스킬타입 검사
+        if (skill == null ||
+            skill.skillType != SkillType.Active ||
+            skill.trigger != SkillTrigger.Manual)
+        {
+            yield break;
+        }
+
+        SkillLevelData levelData =
+            skill.GetLevelData(state.Level);
+
+        if (levelData == null)
+        {
+            yield break;
+        }
+
+        // 이미 사용했거나 쿨타임 중
+        if (!state.CanUseActive())
+        {
+            yield break;
+        }
+
+        // 행동력 지불
+        if (!TrySpendActionPoints(levelData.actionPointCost))
+        {
+            yield break;
+        }
+
+        // 이번 턴 사용 기록 + 쿨타임 시작
+        state.MarkActiveUsed();
+
+        Debug.Log(
+            $"{skill.skillName} 사용 / " +
+            $"남은 행동력 {CurrentActionPoints}");
+
+        // 기존 Effect / AfterHit 연계 시스템 그대로 이용
+        yield return ExecuteSkill(
+            state,
+            SkillTrigger.Manual);
+    }
+
 
     public List<BattleSkillState> GetUsableActiveSkills()
     {
@@ -751,6 +817,12 @@ public class BattleManager : MonoBehaviour
             SkillData skill = state.Data;
 
             if (skill == null)
+            {
+                continue;
+            }
+
+            //스킬타입 검사
+            if (skill.skillType != SkillType.Active || skill.trigger != SkillTrigger.Manual)
             {
                 continue;
             }

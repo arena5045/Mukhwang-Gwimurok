@@ -163,6 +163,9 @@ public class BattleManager : MonoBehaviour
         {
             buiManager = GetComponent<BattleUiManager>();
         }
+
+
+       
     }
 
     private void OnDestroy()
@@ -805,6 +808,31 @@ public class BattleManager : MonoBehaviour
         yield return ExecuteSkill(
             state,
             SkillTrigger.Manual);
+    }
+
+    public List<BattleSkillState> GetManualActiveSkills()
+    {
+        List<BattleSkillState> manualSkills = new();
+
+        foreach (BattleSkillState state in playerSkillStates)
+        {
+            SkillData skill = state.Data;
+            if (skill == null)
+            {
+                continue;
+            }
+
+            //스킬타입 검사
+            if (skill.skillType != SkillType.Active || 
+                skill.trigger != SkillTrigger.Manual)
+            {
+                continue;
+            }
+
+            manualSkills.Add(state);
+        }
+
+        return manualSkills;
     }
 
 

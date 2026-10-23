@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SkillData
   skillName: "\uB0B4\uB824\uCC0D\uAE30"
   skillDescription: "\uB0B4\uB824\uCC0D\uAE30 \uD14C\uC2A4\uD2B8\n"
-  icon: {fileID: 0}
+  icon: {fileID: 5040250782774221517, guid: e35855184b9ebfe4880332287b6c059f, type: 3}
   skillType: 0
   rarity: 0
   tags: 132

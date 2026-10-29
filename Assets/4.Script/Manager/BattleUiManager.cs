@@ -24,6 +24,13 @@ public class BattleUiManager : MonoBehaviour
     public ScrollRect scrollRect;    // 스크롤 뷰 컴포넌트
     public float logSpeed = 0.3f;    // 한 줄씩 나오는 속도
 
+    [Header("전투 진행 화면")]
+    [SerializeField] private GameObject actionMenuPanel; //공격 메뉴 패널
+    [SerializeField] private GameObject battleLogPanel; //배틀 로그 패널
+
+    [Header("스킬 선택 UI")]
+    [SerializeField] private BattleSkillSelectUI skillSelectUI;
+
     [Header("버튼들")]
     public GameObject btn_battle;
     public GameObject btn_talk;
@@ -94,6 +101,7 @@ private IEnumerator ScrollToBottom()
 
         monsterHpbar.fillAmount = 1f;
 
+        /*
         string startlog = monsinfo.name + "(이)가 나타났다! \n\n 여기서는...";
         AddLog(startlog);
 
@@ -101,6 +109,11 @@ private IEnumerator ScrollToBottom()
         btn_battle.SetActive(true);
         btn_talk.SetActive(true);
         btn_run.SetActive(true);
+        */
+
+
+        // 이번 전투에서 사용할 스킬 목록 생성
+        skillSelectUI.RebuildSkillList();
 
         battle_end_panel.SetActive(false);
         battlePannel.SetActive(true);
@@ -159,6 +172,8 @@ private IEnumerator ScrollToBottom()
         btn_run.SetActive(true);
     }
 
+
+
     public void AddLog(string message)
     {
         // 1. 새 로그 생성 및 설정
@@ -198,6 +213,36 @@ private IEnumerator ScrollToBottom()
         Canvas.ForceUpdateCanvases();
         scrollRect.verticalNormalizedPosition = 1f;
     }
+
+
+    /// <summary>
+    /// 플레이어가 다음 행동을 고르는 기본 화면을 표시한다.
+    /// </summary>
+    public void ShowActionMenu()
+    {
+        actionMenuPanel.SetActive(true);
+        battleLogPanel.SetActive(false);
+    }
+
+    /// <summary>
+    /// 플레이어 또는 적의 행동이 실행되는 동안
+    /// 전투 로그 화면을 표시한다.
+    /// </summary>
+    public void ShowResolutionLog()
+    {
+        actionMenuPanel.SetActive(false);
+        battleLogPanel.SetActive(true);
+    }
+
+    /// <summary>
+    /// 전투 로그 화면만 숨긴다.
+    /// 스킬 선택창은 BattleSkillSelectUI가 직접 연다.
+    /// </summary>
+    public void HideResolutionLog()
+    {
+        battleLogPanel.SetActive(false);
+    }
+
 
     internal void UpdateMonsterHP(int monsterHp)
     {  

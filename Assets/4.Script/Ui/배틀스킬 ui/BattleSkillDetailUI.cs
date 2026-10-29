@@ -23,6 +23,9 @@ public class BattleSkillDetailUI : MonoBehaviour
             Clear();
             return;
         }
+        // 스킬이 선택되면 상세 정보창을 표시
+        gameObject.SetActive(true);
+
 
         SkillData skill = state.Data;
 
@@ -60,18 +63,10 @@ public class BattleSkillDetailUI : MonoBehaviour
     }
 
     /// <summary>
-    /// 선택된 스킬이 없을 때 상세 정보를 비운다.
+    /// 선택된 스킬이 없으면 상세 정보창을 숨긴다.
     /// </summary>
     public void Clear()
     {
-        iconImage.sprite = null;
-        iconImage.enabled = false;
-
-        actionPointText.text = "";
-        nameText.text = "";
-        descriptionText.text = "";
-        cooldownText.text = "";
-        initialCooldownText.text = "";
-        tagText.text = "";
+        gameObject.SetActive(false);
     }
 }

@@ -1,10 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Action = System.Action;
 
 public class BattleManager : MonoBehaviour
 {
     public static BattleManager instance { get; private set; }
+
+    private bool isResolvingAction; // 현재 행동이 처리 중인지 추적
 
     public Monster_So test_so;
 
@@ -228,6 +231,9 @@ public class BattleManager : MonoBehaviour
         // Monster_So의 원본 전투 능력치를 그대로 복사하도록 유지한다.
         currentMonsterInfo = new MonsterSetInfo(monster_data);
 
+        // 첫 플레이어 행동 시작
+        StartPlayerTurn();
+
         // UI 매니저에게 요청
         buiManager.BattleUiSetting(currentMonsterInfo);
 
@@ -409,6 +415,27 @@ public class BattleManager : MonoBehaviour
         buiManager.BattleEndUi_Open();
     }
 
+    /// <summary>
+    /// 새로운 플레이어 행동을 시작한다.
+    /// 행동력과 스킬의 턴 단위 상태를 초기화한다.
+    /// </summary>
+    public void StartPlayerTurn()
+    {
+        PlayerActionCount++;
+
+        // 스킬 사용 여부 초기화 + 쿨타임 감소
+        foreach (BattleSkillState state in playerSkillStates)
+        {
+            state.BeginPlayerTurn();
+        }
+
+        // 행동력 회복
+        CurrentActionPoints = maxActionPoints;
+
+        Debug.Log(
+            $"플레이어 행동 시작 / 행동력 {CurrentActionPoints}/{MaxActionPoints}");
+    }
+
     IEnumerator PlayerTurn()
     {
         // 상대가 앞선 행동에서 이미 쓰러졌다면 행동 자체가 시작되지 않은 것이므로
@@ -440,12 +467,13 @@ public class BattleManager : MonoBehaviour
         //테스트용
         if (usableActiveSkills.Count > 0)
         {
-            yield return UseManualSkillRoutine(
-                usableActiveSkills[0]);
+            //yield return UseManualSkillRoutine(
+               // usableActiveSkills[0]);
 
             // 테스트 중에는 기존 자동 공격 로직으로 내려가지 않는다.
             yield break;
         }
+
         //로그 확인용
         foreach (BattleSkillState state in usableActiveSkills)
         {
@@ -753,20 +781,20 @@ public class BattleManager : MonoBehaviour
 
     }
 
-    // 사용스킬 시전시
-    public void UseManualSkill(BattleSkillState state)
+    /// <summary>
+    /// 선택한 Manual 스킬을 현재 사용할 수 있는지 검사한다.
+    /// </summary>
+    /// 
+    public bool CanUseManualSkill(BattleSkillState state)
     {
-        if (state == null)
+
+        if (state == null ||
+              currentPlayerInfo == null ||
+              currentMonsterInfo == null)
         {
-            return;
+            return false;
         }
 
-        StartCoroutine(UseManualSkillRoutine(state));
-    }
-
-    private IEnumerator UseManualSkillRoutine(
-    BattleSkillState state)
-    {
         SkillData skill = state.Data;
 
         //스킬타입 검사
@@ -774,26 +802,75 @@ public class BattleManager : MonoBehaviour
             skill.skillType != SkillType.Active ||
             skill.trigger != SkillTrigger.Manual)
         {
-            yield break;
+            return false;
         }
 
         SkillLevelData levelData =
             skill.GetLevelData(state.Level);
-
         if (levelData == null)
         {
-            yield break;
+            return false;
         }
 
         // 이미 사용했거나 쿨타임 중
         if (!state.CanUseActive())
         {
-            yield break;
+            return false;
         }
 
-        // 행동력 지불
-        if (!TrySpendActionPoints(levelData.actionPointCost))
+        // 행동력 지불 가능 여부
+        if (CurrentActionPoints < levelData.actionPointCost)
         {
+            return false;
+        }
+
+        // 기존 도력 비용이 남은 데이터 때문에
+        // AP만 잃는 상황을 방지
+        if (currentPlayerInfo.currentmp < levelData.mpCost)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    /// <summary>
+    /// 선택한 Manual 스킬을 실행한다.
+    /// 실행이 끝나면 onComplete를 호출한다.
+    /// </summary>
+    public bool UseManualSkill(
+        BattleSkillState state,
+        Action onComplete = null)
+    {
+        if (isResolvingAction  || !CanUseManualSkill(state))
+        {
+            return false;
+        }
+        // 코루틴 시작 전에 잠가서 중복 입력을 방지
+        isResolvingAction = true;
+
+        StartCoroutine(UseManualSkillRoutine(state,onComplete));
+
+        return true;
+    }
+
+    private IEnumerator UseManualSkillRoutine(
+    BattleSkillState state,
+    Action onComplete)
+    {
+
+        SkillData skill = state.Data;
+
+        SkillLevelData levelData =
+            skill.GetLevelData(state.Level);
+
+        // 행동력 지불
+        if (!TrySpendActionPoints(
+                levelData.actionPointCost))
+        {
+            isResolvingAction = false;
+            onComplete?.Invoke();
             yield break;
         }
 
@@ -808,6 +885,20 @@ public class BattleManager : MonoBehaviour
         yield return ExecuteSkill(
             state,
             SkillTrigger.Manual);
+
+        // 마지막 로그와 연출을 확인할 짧은 시간
+        yield return new WaitForSeconds(0.25f);
+
+        // 적이 쓰러졌다면 기존 전투 종료 흐름 실행
+        if (currentMonsterInfo.currentHp <= 0)
+        {
+            yield return FinishBattle();
+        }
+
+        isResolvingAction = false;
+
+        //콜백 있으면 호출
+        onComplete?.Invoke();
     }
 
     public List<BattleSkillState> GetManualActiveSkills()

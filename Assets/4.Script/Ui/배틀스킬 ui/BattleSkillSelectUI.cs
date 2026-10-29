@@ -16,6 +16,9 @@ public class BattleSkillSelectUI : MonoBehaviour
     // 현재 선택한 스킬
     private BattleSkillState selectedSkill;
 
+    //스킬 사용중인지 추적
+    private bool isUsingSkill;
+
     /// <summary>
     /// 무공 선택창을 열고
     /// 기존 스킬 슬롯의 현재 상태를 갱신한다.
@@ -29,6 +32,16 @@ public class BattleSkillSelectUI : MonoBehaviour
 
         gameObject.SetActive(true);
     }
+
+    /// <summary>
+    /// 현재 선택한 스킬을 해제하고 상세정보창을 닫는다.
+    /// </summary>
+    public void ClearSelection()
+    {
+        selectedSkill = null;
+        skillDetailUI.Clear();
+    }
+
 
     /// <summary>
     /// 현재 플레이어가 보유한 Manual 액티브 스킬을
@@ -87,8 +100,88 @@ public class BattleSkillSelectUI : MonoBehaviour
             return;
         }
 
+        // 이미 선택한 스킬을 다시 누르면 선택 해제
+        if (selectedSkill == state)
+        {
+            ClearSelection();
+            return;
+        }
+
+
         selectedSkill = state;
 
         skillDetailUI.SetSkill(state);
+    }
+
+    /// <summary>
+    /// 현재 선택한 스킬을 실제로 사용한다.
+    /// </summary>
+    public void ConfirmSelectedSkill()
+    {
+        if (selectedSkill == null ||
+            isUsingSkill)
+        {
+            return;
+        }
+
+        // 실제 사용할 스킬은 먼저 보관
+        BattleSkillState skillToUse =
+            selectedSkill;
+
+
+        isUsingSkill = true;
+        // 확인한 순간 상세정보는 바로 닫는다.
+        ClearSelection();
+
+        // 행동 연출을 볼 수 있도록 선택창을 닫는다.
+        gameObject.SetActive(false);
+
+        BattleManager.instance.buiManager.ShowResolutionLog();
+
+        //스킬 사용 시도
+        bool started = BattleManager.instance.UseManualSkill(skillToUse, OnSkillResolved);
+
+        // 스킬 사용이 거부됐다면 선택창으로 복귀
+        if (!started)
+        {
+            isUsingSkill = false;
+
+            BattleManager.instance.buiManager.HideResolutionLog();
+
+            Open();
+        }
+    }
+
+    /// <summary>
+    /// 스킬과 자동 연계 실행이 모두 끝난 뒤 호출된다.
+    /// </summary>
+    private void OnSkillResolved()
+    {
+        isUsingSkill = false;
+        selectedSkill = null;
+
+        skillDetailUI.Clear();
+        RefreshSkillStates();
+
+        // 적이 쓰러졌다면 전투 종료 UI가 처리하므로 복귀하지 않는다.
+        if (BattleManager.instance.currentMonsterInfo == null ||
+            BattleManager.instance.currentMonsterInfo.currentHp <= 0)
+        {
+            return;
+        }
+
+        //로그창 닫기
+        BattleManager.instance.buiManager.HideResolutionLog();
+
+        if (BattleManager.instance.CurrentActionPoints > 0)
+        {
+            // 행동력이 남았다면 바로 다음 무공을 고른다.
+            Open();
+        }
+        else
+        {
+            // 행동력이 없다면 도구 또는 행동 종료를 고르는 화면으로 복귀
+            BattleManager.instance.buiManager.ShowActionMenu();
+        }
     }
 }

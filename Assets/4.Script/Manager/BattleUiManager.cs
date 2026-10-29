@@ -117,6 +117,9 @@ private IEnumerator ScrollToBottom()
 
         battle_end_panel.SetActive(false);
         battlePannel.SetActive(true);
+
+        // 새 전투는 항상 기본 행동 화면에서 시작
+        ShowActionMenu();
     }
 
     private IEnumerator BattleUiExit_Coroutine()

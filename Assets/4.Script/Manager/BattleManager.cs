@@ -232,10 +232,13 @@ public class BattleManager : MonoBehaviour
         currentMonsterInfo = new MonsterSetInfo(monster_data);
 
         // 첫 플레이어 행동 시작
-        StartPlayerTurn();
+        StartPlayerTurn(false);
 
         // UI 매니저에게 요청
         buiManager.BattleUiSetting(currentMonsterInfo);
+
+        buiManager.AddLogImmediate(
+            $"─── 제{PlayerActionCount}합 · 내 차례 ───");
 
     }
 
@@ -419,7 +422,7 @@ public class BattleManager : MonoBehaviour
     /// 새로운 플레이어 행동을 시작한다.
     /// 행동력과 스킬의 턴 단위 상태를 초기화한다.
     /// </summary>
-    public void StartPlayerTurn()
+    public void StartPlayerTurn(bool addTurnLog = true)
     {
         PlayerActionCount++;
 
@@ -432,9 +435,82 @@ public class BattleManager : MonoBehaviour
         // 행동력 회복
         CurrentActionPoints = maxActionPoints;
 
+        //로그 ui 추가
+        // 첫 전투 UI 세팅 전에는 로그를 아직 출력하지 않는다.
+        if (addTurnLog)
+        {
+            buiManager.AddLogSpacer();
+            buiManager.AddLogImmediate(
+                $"─── 제{PlayerActionCount}합 · 내 차례 ───");
+        }
+
+        //ui갱신
+        buiManager.UpdateActionPointUI(CurrentActionPoints,MaxActionPoints);
+
         Debug.Log(
-            $"플레이어 행동 시작 / 행동력 {CurrentActionPoints}/{MaxActionPoints}");
+           $"플레이어 행동 시작 / 행동력 {CurrentActionPoints}/{MaxActionPoints}");
     }
+    /// <summary>
+    /// 플레이어의 현재 행동을 끝내고 적 행동을 시작한다.
+    /// </summary>
+    
+    public void EndPlayerTurn()
+    {
+        // 스킬이나 적 행동 처리 중에는 중복 실행하지 않는다.
+        if (isResolvingAction)
+        {
+            return;
+        }
+
+        if (currentPlayerInfo == null ||
+            currentMonsterInfo == null ||
+            currentPlayerInfo.currentHp <= 0 ||
+            currentMonsterInfo.currentHp <= 0)
+        {
+            return;
+        }
+
+        StartCoroutine(EndPlayerTurnRoutine());
+    }
+
+    /// <summary>
+    /// 적 행동을 처리한 뒤 살아있다면
+    /// 새로운 플레이어 행동을 시작한다.
+    /// </summary>
+    private IEnumerator EndPlayerTurnRoutine()
+    {
+        isResolvingAction = true;
+
+        // 적 행동과 로그를 확인할 수 있도록 로그 화면 표시
+        buiManager.ShowResolutionLog();
+
+        // 적 행동 시작 구분
+        buiManager.AddLogSpacer();
+        buiManager.AddLogImmediate(
+            $"─── 제{PlayerActionCount}합 · 적의 차례 ───");
+
+        // 적 행동
+        yield return MonsterTurn();
+
+        // 적 공격으로 플레이어가 쓰러졌다면 전투 종료
+        if (currentPlayerInfo.currentHp <= 0)
+        {
+            yield return FinishBattle();
+
+            isResolvingAction = false;
+            yield break;
+        }
+
+        // 다음 플레이어 행동 시작
+        StartPlayerTurn();
+
+        // 다시 행동 선택 화면으로 복귀
+        buiManager.ShowActionMenu();
+
+        isResolvingAction = false;
+    }
+
+
 
     IEnumerator PlayerTurn()
     {
@@ -544,6 +620,7 @@ public class BattleManager : MonoBehaviour
             }
         }
     }
+
 
     IEnumerator MonsterTurn()
     {
@@ -777,6 +854,10 @@ public class BattleManager : MonoBehaviour
         }
 
         CurrentActionPoints -= amount;
+
+        // 행동력 변경 즉시 HUD 갱신
+        buiManager.UpdateActionPointUI(CurrentActionPoints,MaxActionPoints);
+
         return true;
 
     }

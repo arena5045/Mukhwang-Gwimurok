@@ -13,6 +13,10 @@ public class BattleSkillDetailUI : MonoBehaviour
     [SerializeField] private TMP_Text initialCooldownText;
     [SerializeField] private TMP_Text tagText;
 
+    [Header("현재 스킬 상태")]
+    [SerializeField] private GameObject cooldownOverlay;
+    [SerializeField] private TMP_Text cooldownRemainingText;
+
     /// <summary>
     /// 선택된 스킬의 상세 정보를 표시한다.
     /// </summary>
@@ -56,6 +60,19 @@ public class BattleSkillDetailUI : MonoBehaviour
 
         initialCooldownText.text =
             $"준비시간: {levelData.initialCooldownTurns}";
+
+        // 현재 남은 재사용 대기시간 표시
+        if (state.CooldownRemaining > 0)
+        {
+            cooldownOverlay.SetActive(true);
+            cooldownRemainingText.text =
+                state.CooldownRemaining.ToString();
+        }
+        else
+        {
+            cooldownOverlay.SetActive(false);
+        }
+
 
         // 일단 기본 문자열로 표시
         tagText.text =

@@ -28,6 +28,10 @@ public class BattleUiManager : MonoBehaviour
     [SerializeField] private GameObject actionMenuPanel; //공격 메뉴 패널
     [SerializeField] private GameObject battleLogPanel; //배틀 로그 패널
 
+    [Header("행동력 UI")]
+    [SerializeField] private TMP_Text actionPointText;
+
+
     [Header("스킬 선택 UI")]
     [SerializeField] private BattleSkillSelectUI skillSelectUI;
 
@@ -175,6 +179,16 @@ private IEnumerator ScrollToBottom()
         btn_run.SetActive(true);
     }
 
+    /// <summary>
+    /// 현재 행동력을 전투 HUD에 표시한다.
+    /// </summary>
+    public void UpdateActionPointUI(
+        int current,
+        int max)
+    {
+        actionPointText.text =
+            $"행동력 {current}/{max}";
+    }
 
 
     public void AddLog(string message)
@@ -202,6 +216,51 @@ private IEnumerator ScrollToBottom()
         // 4. (선택) 개수 제한 로직
         if (logParent.childCount > 50) Destroy(logParent.GetChild(0).gameObject);
     }
+
+    /// <summary>
+    /// 타이핑 연출 없이 로그를 즉시 표시한다.
+    /// 행동 구분선처럼 바로 보여야 하는 정보에 사용한다.
+    /// </summary>
+    public void AddLogImmediate(string message)
+    {        
+        // 1. 새 로그 생성 및 설정
+        GameObject newLog = Instantiate(logPrefab, logParent);
+        TextMeshProUGUI textComp = newLog.GetComponent<TextMeshProUGUI>();
+
+        // 2. 초기 세팅 (줄바꿈 방지를 위해 텍스트는 미리 다 넣음)
+        textComp.text = message;
+        textComp.maxVisibleCharacters = message.Length;
+
+        // 3. (선택) 개수 제한 로직
+        if (logParent.childCount > 50)
+        {
+            Destroy(logParent.GetChild(0).gameObject);
+        }
+
+        Canvas.ForceUpdateCanvases();
+        scrollRect.verticalNormalizedPosition = 1f;
+    }
+
+    /// <summary>
+    /// 로그 사이에 실제 여백을 추가한다.
+    /// </summary>
+    public void AddLogSpacer(float height = 25f)
+    {
+        GameObject spacer =
+            new GameObject(
+                "Log Spacer",
+                typeof(RectTransform),
+                typeof(LayoutElement));
+
+        spacer.transform.SetParent(logParent, false);
+
+        LayoutElement layout =
+            spacer.GetComponent<LayoutElement>();
+
+        layout.preferredHeight = height;
+        layout.minHeight = height;
+    }
+
 
     public void ClearLog()
     {

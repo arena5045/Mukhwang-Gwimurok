@@ -170,18 +170,13 @@ public class BattleSkillSelectUI : MonoBehaviour
             return;
         }
 
-        //로그창 닫기
+        //로그창 닫은뒤 전투메뉴호출
         BattleManager.instance.buiManager.HideResolutionLog();
+        BattleManager.instance.buiManager.ShowActionMenu();
 
         if (BattleManager.instance.CurrentActionPoints > 0)
         {
-            // 행동력이 남았다면 바로 다음 무공을 고른다.
             Open();
-        }
-        else
-        {
-            // 행동력이 없다면 도구 또는 행동 종료를 고르는 화면으로 복귀
-            BattleManager.instance.buiManager.ShowActionMenu();
         }
     }
 }

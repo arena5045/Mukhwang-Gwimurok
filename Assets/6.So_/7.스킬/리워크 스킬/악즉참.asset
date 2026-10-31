@@ -20,7 +20,7 @@ MonoBehaviour:
   tags: 1
   trigger: 0
   levels:
-  - mpCost: 30
+  - mpCost: 0
     maxActivationsPerAction: 1
     actionPointCost: 5
     cooldownTurns: 3
@@ -28,7 +28,7 @@ MonoBehaviour:
     conditions: []
     effects:
     - rid: 7882403322454081543
-  - mpCost: 35
+  - mpCost: 0
     maxActivationsPerAction: 1
     actionPointCost: 1
     cooldownTurns: 0

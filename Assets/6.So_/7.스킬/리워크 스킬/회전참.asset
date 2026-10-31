@@ -20,22 +20,20 @@ MonoBehaviour:
   tags: 81
   trigger: 0
   levels:
-  - mpCost: 30
+  - mpCost: 0
     maxActivationsPerAction: 1
     actionPointCost: 3
     cooldownTurns: 1
     initialCooldownTurns: 0
-    conditions:
-    - rid: 4748692158412226642
+    conditions: []
     effects:
     - rid: 4748692158412226641
-  - mpCost: 30
+  - mpCost: 0
     maxActivationsPerAction: 1
     actionPointCost: 1
     cooldownTurns: 0
     initialCooldownTurns: 0
-    conditions:
-    - rid: 7882403322454081539
+    conditions: []
     effects:
     - rid: 7882403322454081540
   - mpCost: 30
@@ -43,8 +41,7 @@ MonoBehaviour:
     actionPointCost: 1
     cooldownTurns: 0
     initialCooldownTurns: 0
-    conditions:
-    - rid: 7882403322454081541
+    conditions: []
     effects:
     - rid: 7882403322454081542
   references:
@@ -55,23 +52,11 @@ MonoBehaviour:
       data:
         damageMultiplier: 0.25
         hitCount: 3
-    - rid: 4748692158412226642
-      type: {class: ChanceCondition, ns: , asm: Assembly-CSharp}
-      data:
-        chance: 0.4
-    - rid: 7882403322454081539
-      type: {class: ChanceCondition, ns: , asm: Assembly-CSharp}
-      data:
-        chance: 0.5
     - rid: 7882403322454081540
       type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
       data:
         damageMultiplier: 0.25
         hitCount: 4
-    - rid: 7882403322454081541
-      type: {class: ChanceCondition, ns: , asm: Assembly-CSharp}
-      data:
-        chance: 0.6
     - rid: 7882403322454081542
       type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
       data:

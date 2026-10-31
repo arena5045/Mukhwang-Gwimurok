@@ -146,7 +146,7 @@ public class BattleSkillSelectUI : MonoBehaviour
         {
             isUsingSkill = false;
 
-            BattleManager.instance.buiManager.HideResolutionLog();
+            BattleManager.instance.buiManager.ShowActionMenu();
 
             Open();
         }

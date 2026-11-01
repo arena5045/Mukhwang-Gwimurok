@@ -16,6 +16,11 @@ public class Monster_So : ScriptableObject
     public float defencePower;
     public float attackSpeed;
 
+    [Header("전투 패턴")]
+    public EnemyPatternSetData battlePattern =
+    new EnemyPatternSetData();
+
+
     [Header("전투 외 수치")]
     public float negoProbability;
     public float runProbability;

@@ -19,6 +19,34 @@ MonoBehaviour:
   attackPower: 10
   defencePower: 0
   attackSpeed: 5
+  battlePattern:
+    startPhaseIndex: 0
+    phases:
+    - mode: 2
+      actions:
+      - actionName: "\uBB3C\uC5B4\uB72F\uAE30 "
+        intentDescription: "\uACF5\uACA9\uB825\uC758 100%\uB85C \uACF5\uACA9"
+        effects:
+        - effectType: 0
+          damageMultiplier: 1
+          hitCount: 1
+          amount: 0
+      - actionName: "\uD3EC\uD6A8"
+        intentDescription: "\uC790\uC2E0\uC758 \uACF5\uACA9\uB825 25%\uC99D\uAC00"
+        effects:
+        - effectType: 1
+          damageMultiplier: 1
+          hitCount: 1
+          amount: 2
+      - actionName: "\uD560\uD034\uAE30 "
+        intentDescription: "\uACF5\uACA9\uB825\uC758 75%\uB85C 2\uD68C \uACF5\uACA9"
+        effects:
+        - effectType: 0
+          damageMultiplier: 0.75
+          hitCount: 2
+          amount: 0
+      transitionAfterActions: 0
+      nextPhaseIndex: -1
   negoProbability: 0
   runProbability: 30
   soul_drop: 5

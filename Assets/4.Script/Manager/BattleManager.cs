@@ -19,6 +19,13 @@ public class BattleManager : MonoBehaviour
     // 현재 전투에서 사용하는 플레이어 스킬 상태
     private readonly List<BattleSkillState> playerSkillStates = new();
 
+    // 현재 적의 패턴 진행 상태
+    private EnemyPatternRuntime enemyPatternRuntime;
+
+    // 플레이어에게 현재 예고된 적 행동
+    private EnemyActionData currentEnemyAction;
+
+
     // 전투 중 실제로 시작된 행동 수만 기록한다. 다단히트의 개별 타격 수와는 구분하며,
     // 외부에서는 결과만 확인할 수 있도록 setter를 BattleManager 내부로 제한한다.
     public int PlayerActionCount { get; private set; }
@@ -197,8 +204,13 @@ public class BattleManager : MonoBehaviour
         MonsterActionCount = 0;
         CurrentActionPoints = 0;
 
+        //현재 플레이어 정보 초기화
         currentPlayerInfo = null;
         currentMonsterInfo = null;
+
+        //현재 적 정보 초기화
+        enemyPatternRuntime = null;
+        currentEnemyAction = null;
 
     }
 
@@ -231,8 +243,19 @@ public class BattleManager : MonoBehaviour
         // Monster_So의 원본 전투 능력치를 그대로 복사하도록 유지한다.
         currentMonsterInfo = new MonsterSetInfo(monster_data);
 
+        // 이번 전투용 적 패턴 진행 상태 생성
+        enemyPatternRuntime =
+            new EnemyPatternRuntime(
+                monster_data.battlePattern);
+
+        currentEnemyAction = null;
+
+
         // 첫 플레이어 행동 시작
         StartPlayerTurn(false);
+
+        // 첫 적 행동을 미리 선택
+        PrepareNextEnemyAction();
 
         // UI 매니저에게 요청
         buiManager.BattleUiSetting(currentMonsterInfo);
@@ -624,6 +647,7 @@ public class BattleManager : MonoBehaviour
 
     IEnumerator MonsterTurn()
     {
+        /* 테스트 전에 돌리기
         // 플레이어가 이미 쓰러졌거나 몬스터가 행동할 수 없는 상태라면
         // 실제 행동이 아니므로 카운트에 포함하지 않는다.
         if (currentPlayerInfo == null || currentMonsterInfo == null ||
@@ -634,6 +658,31 @@ public class BattleManager : MonoBehaviour
 
         MonsterActionCount++;
         yield return ExecuteMonsterAttack($"<color=red>{currentMonsterInfo.name}</color>의 공격!", 1f, 1);
+        */
+
+
+        if (currentPlayerInfo == null ||
+        currentMonsterInfo == null ||
+        currentPlayerInfo.currentHp <= 0 ||
+        currentMonsterInfo.currentHp <= 0)
+        {
+            yield break;
+        }
+
+        MonsterActionCount++;
+
+        // 기척에 예고된 행동 실제 실행
+        yield return ExecuteCurrentEnemyAction();
+
+        // 현재 예고 행동이 끝났다고 처리
+        enemyPatternRuntime?.CompleteCurrentAction();
+
+        // 전투가 계속된다면 다음 적 행동 준비
+        if (currentPlayerInfo.currentHp > 0 &&
+            currentMonsterInfo.currentHp > 0)
+        {
+            PrepareNextEnemyAction();
+        }
     }
 
     /// <summary>
@@ -828,6 +877,163 @@ public class BattleManager : MonoBehaviour
 
         buiManager.BattleBtnsOff();
     }
+
+    /// <summary>
+    /// 다음 적 행동을 미리 선택한다.
+    /// 현재는 콘솔에서 패턴 순서만 검증한다.
+    /// </summary>
+    private void PrepareNextEnemyAction()
+    {
+        currentEnemyAction =
+            enemyPatternRuntime?.PrepareNextAction();
+
+        if (currentEnemyAction == null)
+        {
+            Debug.LogWarning(
+                "[Enemy Pattern] 사용 가능한 적 행동이 없습니다.");
+
+            return;
+        }
+
+        Debug.Log(
+            $"[Enemy Pattern] " +
+            $"단계 {enemyPatternRuntime.PhaseIndex} / " +
+            $"다음 행동 : {currentEnemyAction.actionName}");
+
+        buiManager.UpdateEnemyIntentUI(currentEnemyAction);
+    }
+
+    /// <summary>
+    /// 현재 적의 기척에 예고된 행동을 실제로 실행한다.
+    /// 등록된 효과를 위에서부터 순서대로 처리한다.
+    /// </summary>
+    private IEnumerator ExecuteCurrentEnemyAction()
+    {
+        if (currentEnemyAction == null)
+        {
+            yield break;
+        }
+
+        buiManager.AddLog(
+            $"<color=red>{currentMonsterInfo.name}</color>의 " +
+            $"{currentEnemyAction.actionName}!");
+
+        foreach (EnemyActionEffectData effect
+            in currentEnemyAction.effects)
+        {
+            if (effect == null)
+            {
+                continue;
+            }
+
+            switch (effect.effectType)
+            {
+                case EnemyActionEffectType.Attack:
+
+                    yield return ExecuteMonsterAttackEffect(
+                        effect.damageMultiplier,
+                        effect.hitCount);
+
+                    break;
+
+                case EnemyActionEffectType.GainAttack:
+                    //선딜 
+                    yield return new WaitForSeconds(0.5f);
+
+                    currentMonsterInfo.buffatk +=
+                        effect.amount;
+
+                    buiManager.AddLog(
+                        $"<color=red>{currentMonsterInfo.name}</color>의 " +
+                        $"공격력이 {effect.amount:0.#} 증가했다!");
+
+                    // 강화 로그를 확인할 시간
+                    yield return new WaitForSeconds(0.8f);
+
+                    break;
+
+                case EnemyActionEffectType.GainDefense:
+                    //선딜 
+                    yield return new WaitForSeconds(0.5f);
+
+                    currentMonsterInfo.buffdef +=
+                        effect.amount;
+
+                    buiManager.AddLog(
+                        $"<color=red>{currentMonsterInfo.name}</color>의 " +
+                        $"방어력이 {effect.amount:0.#} 증가했다!");
+
+                    // 강화 로그를 확인할 시간
+                    yield return new WaitForSeconds(0.8f);
+
+                    break;
+            }
+
+            // 공격 도중 플레이어가 쓰러졌으면
+            // 뒤의 효과는 더 실행하지 않는다.
+            if (currentPlayerInfo.currentHp <= 0)
+            {
+                yield break;
+            }
+        }
+    }
+
+
+    private IEnumerator ExecuteMonsterAttackEffect(
+    float damageMultiplier,
+    int hitCount)
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        for (int hitIndex = 0;
+             hitIndex < hitCount;
+             hitIndex++)
+        {
+            float attack =
+                (currentMonsterInfo.atk +
+                 currentMonsterInfo.buffatk) *
+                currentMonsterInfo.multatk;
+
+            float defense =
+                (currentPlayerInfo.defense +
+                 currentPlayerInfo.buffdef) *
+                currentPlayerInfo.multdef;
+
+            int damage =
+                CalculateDamage(
+                    attack,
+                    defense,
+                    damageMultiplier);
+
+            currentPlayerInfo.currentHp =
+                Mathf.Max(
+                    0,
+                    currentPlayerInfo.currentHp - damage);
+
+            buiManager.AddLog(
+                $"<color=#99FF99>당신</color>에게 " +
+                $"<color=red>{damage}</color>의 피해를 입혔다!");
+
+            GameUiManager.Instance
+                .UpdatePlayerHPUI_battle(
+                    currentPlayerInfo.currentHp);
+
+            buiManager.MonsterAttackEffect();
+
+            if (currentPlayerInfo.currentHp <= 0)
+            {
+                break;
+            }
+
+            if (hitIndex < hitCount - 1)
+            {
+                yield return new WaitForSeconds(0.2f);
+            }
+        }
+
+        yield return new WaitForSeconds(0.8f);
+    }
+
 
     public void EnemyBurst(Vector3 value)
     {
@@ -1234,4 +1440,32 @@ public class BattleManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 현재 적과 플레이어의 능력치를 기준으로
+    /// 적 공격의 예상 1타 피해량을 계산한다.
+    /// </summary>
+    public int CalculateEnemyPreviewDamage(
+        float damageMultiplier)
+    {
+        if (currentMonsterInfo == null ||
+            currentPlayerInfo == null)
+        {
+            return 0;
+        }
+
+        float attack =
+            (currentMonsterInfo.atk +
+             currentMonsterInfo.buffatk) *
+            currentMonsterInfo.multatk;
+
+        float defense =
+            (currentPlayerInfo.defense +
+             currentPlayerInfo.buffdef) *
+            currentPlayerInfo.multdef;
+
+        return CalculateDamage(
+            attack,
+            defense,
+            damageMultiplier);
+    }
 }

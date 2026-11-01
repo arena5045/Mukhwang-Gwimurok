@@ -28,12 +28,28 @@ public class BattleUiManager : MonoBehaviour
     [SerializeField] private GameObject actionMenuPanel; //공격 메뉴 패널
     [SerializeField] private GameObject battleLogPanel; //배틀 로그 패널
 
+    //적기본크기
+    private Vector3 monsterBaseScale;
+    //적 트윈 애니메이션
+    private Tween monsterAttackScaleTween;
+
+
     [Header("행동력 UI")]
     [SerializeField] private TMP_Text actionPointText;
 
 
     [Header("스킬 선택 UI")]
     [SerializeField] private BattleSkillSelectUI skillSelectUI;
+
+    [Header("적의 기척 UI")]
+    [SerializeField] private TMP_Text enemyActionNameText;
+    [SerializeField] private Transform enemyEffectContent;
+    [SerializeField] private EnemyIntentEffectUI enemyEffectPrefab;
+
+    [Header("적 행동 아이콘")]
+    [SerializeField] private Sprite attackIcon;
+    [SerializeField] private Sprite gainAttackIcon;
+    [SerializeField] private Sprite gainDefenseIcon;
 
     [Header("버튼들")]
     public GameObject btn_battle;
@@ -82,6 +98,7 @@ private IEnumerator ScrollToBottom()
         // 시작할 때 원래 위치와 색상을 기억해둡니다.
         originPosition = monsterSprite.transform.localPosition;
         originColor = monsterSprite.color;
+        monsterBaseScale = monsterSprite.transform.localScale;
     }
 
     public void BattleUiRefresh()
@@ -102,6 +119,9 @@ private IEnumerator ScrollToBottom()
         monsterSprite.sprite = monsinfo.sprite;
         monsterSprite.SetNativeSize();
         monsterSprite.GetComponent<Transform>().localScale = Vector3.one * monsinfo.imgsize;
+
+        // 이번 몬스터의 정상 크기 기억
+        monsterBaseScale = monsterSprite.transform.localScale;
 
         monsterHpbar.fillAmount = 1f;
 
@@ -324,8 +344,111 @@ private IEnumerator ScrollToBottom()
         monsterHpText.text = "체력 : " + displayHp.ToString();
     }
 
+    /// <summary>
+    /// 다음 적 행동의 이름과 효과들을 표시한다.
+    /// </summary>
+    public void UpdateEnemyIntentUI(
+        EnemyActionData action)
+    {
+        enemyActionNameText.text =
+            action != null
+            ? action.actionName
+            : "";
+
+        ClearEnemyIntentEffects();
+
+        if (action == null ||
+            action.effects == null)
+        {
+            return;
+        }
+
+        foreach (EnemyActionEffectData effect
+            in action.effects)
+        {
+            CreateEnemyIntentEffect(effect);
+        }
+    }
+    private void CreateEnemyIntentEffect(
+      EnemyActionEffectData effect)
+    {
+        string value;
+
+        switch (effect.effectType)
+        {
+            case EnemyActionEffectType.Attack:
+                {
+                    int damage =
+                        BattleManager.instance
+                            .CalculateEnemyPreviewDamage(
+                                effect.damageMultiplier);
+
+                    value =
+                        effect.hitCount > 1
+                        ? $"공격 {damage} × {effect.hitCount}"
+                        : $"공격 {damage}";
+
+                    break;
+                }
+
+            case EnemyActionEffectType.GainAttack:
+                value =
+                    $"공격력 +{effect.amount:0.#}";
+                break;
+
+            case EnemyActionEffectType.GainDefense:
+                value =
+                    $"방어력 +{effect.amount:0.#}";
+                break;
+
+            default:
+                return;
+        }
+
+        EnemyIntentEffectUI slot =
+            Instantiate(
+                enemyEffectPrefab,
+                enemyEffectContent);
+
+        // 아이콘은 아직 사용하지 않는다.
+        slot.Setup(null, value);
+    }
+
+    private void ClearEnemyIntentEffects()
+    {
+        foreach (Transform child
+            in enemyEffectContent)
+        {
+            Destroy(child.gameObject);
+        }
+    }
+
+ 
+
     public void MonsterAttackEffect()
     {
+        // 이전 확대 연출이 남아있다면 중단
+        monsterAttackScaleTween?.Kill();
+
+        // 항상 정상 크기에서 새 연출 시작
+        monsterSprite.transform.localScale =
+            monsterBaseScale;
+
+        monsterAttackScaleTween = monsterSprite.transform.DOScale( monsterBaseScale * 1.1f, 0.2f)
+        .SetLoops(2,LoopType.Yoyo).OnComplete(() =>
+        {
+            // Tween 오차나 중단 상태가 남지 않도록
+            // 마지막에 정상 크기를 확정한다.
+            monsterSprite.transform.localScale =
+                monsterBaseScale;
+
+            monsterAttackScaleTween = null;
+        });
+
+        monsterSprite.DOColor(new Color(1, 1, 1, 0.8f),0.1f)
+            .SetLoops(2,LoopType.Yoyo);
+        /*
+
         // 현재 스케일 값을 저장
         Vector3 originalScale = monsterSprite.transform.localScale;
 
@@ -338,6 +461,7 @@ private IEnumerator ScrollToBottom()
 
         // 2. 색상 연출: 하얗게 번쩍이거나 투명도 조절
         monsterSprite.DOColor(new Color(1, 1, 1, 0.8f), 0.1f).SetLoops(2, LoopType.Yoyo);
+    */
     }
 
     public void MonsterDamageEffect()

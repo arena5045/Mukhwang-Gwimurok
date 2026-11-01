@@ -36,7 +36,7 @@ MonoBehaviour:
     conditions: []
     effects:
     - rid: 7882403322454081540
-  - mpCost: 30
+  - mpCost: 0
     maxActivationsPerAction: 1
     actionPointCost: 1
     cooldownTurns: 0

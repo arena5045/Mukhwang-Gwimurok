@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int initialMaxHp = 100;
     [SerializeField] private int initialMaxMp = 100;
     [SerializeField] private float initialAdAttack = 15f;
+    [SerializeField] private float initialDefense = 10f;
     [SerializeField] private float initialSpeed = 5f;
     [SerializeField] private int initialHpRegen = 6;
 
@@ -218,9 +219,11 @@ public class GameManager : MonoBehaviour
         player.stats.baseAdAttack = character != null && character.startAtk > 0
             ? character.startAtk
             : initialAdAttack;
+        player.stats.baseDefense = initialDefense;
         // CharacterData에는 아직 시작 속도 필드가 없으므로 이번 단계에서는
         // 모든 캐릭터가 GameManager에 명시된 동일한 기본 속도로 새 런을 시작한다.
         player.stats.baseSpeed = initialSpeed;
+
         player.Initialize();
 
         //스킬 테스트용 코드

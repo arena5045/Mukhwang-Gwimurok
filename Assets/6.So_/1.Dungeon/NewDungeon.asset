@@ -16,9 +16,9 @@ MonoBehaviour:
   dungeonSprite: {fileID: 3869848582886692504, guid: 5f3c2262e678921448c075bd84f2d5a0, type: 3}
   normalMonsters:
   - {fileID: 11400000, guid: ae5f012dd5092b6428ac1da0534db113, type: 2}
-  - {fileID: 11400000, guid: 41cff044997a5784c8e2bdbe6816b465, type: 2}
-  - {fileID: 11400000, guid: 606ef83bc23aaa14598d558b9bdfb005, type: 2}
-  - {fileID: 11400000, guid: 7f111a2415722524b96f04c7ba4ff374, type: 2}
+  - {fileID: 11400000, guid: ae5f012dd5092b6428ac1da0534db113, type: 2}
+  - {fileID: 11400000, guid: ae5f012dd5092b6428ac1da0534db113, type: 2}
+  - {fileID: 11400000, guid: ae5f012dd5092b6428ac1da0534db113, type: 2}
   eliteMonsters:
   - {fileID: 11400000, guid: d709a175422266e44b2aa0f4563bfd79, type: 2}
   - {fileID: 11400000, guid: 4892b606a42e4e54087552a87737ea18, type: 2}

@@ -427,26 +427,40 @@ private IEnumerator ScrollToBottom()
 
     public void MonsterAttackEffect()
     {
+
         // 이전 확대 연출이 남아있다면 중단
         monsterAttackScaleTween?.Kill();
 
-        // 항상 정상 크기에서 새 연출 시작
-        monsterSprite.transform.localScale =
-            monsterBaseScale;
+        Sequence attackSequence = DOTween.Sequence();
 
-        monsterAttackScaleTween = monsterSprite.transform.DOScale( monsterBaseScale * 1.1f, 0.2f)
-        .SetLoops(2,LoopType.Yoyo).OnComplete(() =>
+        // 현재 크기에서 고정된 목표 크기까지 빠르게 확대
+        attackSequence.Append(monsterSprite.transform .DOScale(monsterBaseScale * 1.1f,  0.13f)
+                .SetEase(Ease.OutQuad));
+
+        // 기준 크기로 부드럽게 복귀
+        attackSequence.Append(monsterSprite.transform.DOScale(monsterBaseScale, 0.10f)
+                .SetEase(Ease.InOutSine));
+
+        attackSequence.OnComplete(() =>
         {
-            // Tween 오차나 중단 상태가 남지 않도록
-            // 마지막에 정상 크기를 확정한다.
+            // 최종 오차 방지
             monsterSprite.transform.localScale =
                 monsterBaseScale;
 
             monsterAttackScaleTween = null;
         });
 
-        monsterSprite.DOColor(new Color(1, 1, 1, 0.8f),0.1f)
-            .SetLoops(2,LoopType.Yoyo);
+        monsterAttackScaleTween =
+            attackSequence;
+
+        monsterSprite
+            .DOColor(
+                new Color(1f, 1f, 1f, 0.8f),
+                0.08f)
+            .SetLoops(
+                2,
+                LoopType.Yoyo)
+            .SetEase(Ease.InOutSine);
         /*
 
         // 현재 스케일 값을 저장
@@ -495,12 +509,22 @@ private IEnumerator ScrollToBottom()
     // [연출 2] 다음 전투를 위해 원상복구 (초기화)
     public void ResetMonsterVisual()
     {
-        // 모든 트윈 중단 (혹시 실행 중일지 모를 애니메이션 방지)
+        // 색상 / 투명도 Tween 종료
         monsterSprite.DOKill();
+        // 이동 / 스케일 Tween 종료
+        monsterSprite.transform.DOKill();
+
+        monsterAttackScaleTween = null;
 
         // 위치와 색상을 즉시 원래대로 돌림
-        monsterSprite.transform.localPosition = originPosition;
-        monsterSprite.color = originColor;
+        monsterSprite.transform.localPosition =
+        originPosition;
+
+        monsterSprite.transform.localScale =
+            monsterBaseScale;
+
+        monsterSprite.color =
+            originColor;
 
         // 만약 나타날 때도 스르륵 나타나길 원한다면?
         // monsterImage.color = new Color(1, 1, 1, 0); // 일단 투명하게 만든 뒤

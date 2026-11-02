@@ -105,6 +105,10 @@ public class BattleManager : MonoBehaviour
         public int mpRegenModifier;
 
 
+        // 현재 적의 피해를 대신 받아주는 임시 방어도
+        public int currentGuard;
+
+
         public float addmg;
         public float buffad;
         public float multad;
@@ -136,6 +140,7 @@ public class BattleManager : MonoBehaviour
             currentmp = maxmp;
 
             mpRegenModifier = 0;
+            currentGuard = 0;
 
             addmg = stats.TotalAdAttack;
             buffad = 0;
@@ -449,6 +454,9 @@ public class BattleManager : MonoBehaviour
     {
         PlayerActionCount++;
 
+        // 이전 적 차례에서 남은 방어도 제거
+        currentPlayerInfo.currentGuard = 0;
+
         // 스킬 사용 여부 초기화 + 쿨타임 감소
         foreach (BattleSkillState state in playerSkillStates)
         {
@@ -709,6 +717,68 @@ public class BattleManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 적의 피해를 플레이어에게 적용한다.
+    /// 현재 방어도가 체력보다 먼저 피해를 받는다.
+    /// </summary>
+    private IEnumerator ApplyDamageToPlayer(int damage)
+    {
+        if (currentPlayerInfo == null ||
+            damage <= 0)
+        {
+            yield break;
+        }
+
+        int blockedDamage =
+            Mathf.Min(
+                currentPlayerInfo.currentGuard,
+                damage);
+
+        currentPlayerInfo.currentGuard -=
+            blockedDamage;
+
+        int hpDamage =
+            damage - blockedDamage;
+
+        // 방어도가 피해를 막았다면 먼저 보여준다.
+        if (blockedDamage > 0)
+        {
+            if (hpDamage <= 0)
+            {
+                // 완전 방어는 이 한 줄로 끝
+                buiManager.AddLog(
+                    //$"방어도로 " +
+                    $"<color=#99FF99>{blockedDamage}</color>의 피해를 " +
+                    $"모두 막아냈다!");
+
+                yield return new WaitForSeconds(0.5f);
+                yield break;
+            }
+            /*
+            buiManager.AddLog(
+                //$"방어도가 " +
+                $"<color=#99FF99>{blockedDamage}</color>의 피해를 막았다!");
+                // 방어 → 남은 피해 사이 텀
+            yield return new WaitForSeconds(0.35f);
+            */
+        }
+
+        // 남은 피해 적용
+        currentPlayerInfo.currentHp =
+            Mathf.Max(
+                0,
+                currentPlayerInfo.currentHp - hpDamage);
+
+        buiManager.AddLog(
+            $"<color=#99FF99>당신</color>에게 " +
+            $"<color=red>{hpDamage}</color>의 피해를 입혔다!");
+
+        GameUiManager.Instance
+            .UpdatePlayerHPUI_battle(
+                currentPlayerInfo.currentHp);
+    }
+
+
+    /// <summary>
     /// 플레이어 공격 한 행동을 실행한다. 행동 로그는 한 번만 출력하고,
     /// 각 타격마다 피해 계산·HP 반영·UI 갱신·피격 연출을 수행한다.
     /// </summary>
@@ -804,6 +874,13 @@ public class BattleManager : MonoBehaviour
             float defense = (currentPlayerInfo.defense + currentPlayerInfo.buffdef) * currentPlayerInfo.multdef;
             int damage = CalculateDamage(attack, defense, damageMultiplier);
 
+            // 방어도가 있는 경우, 피해를 방어도에서 먼저 차감
+            if (currentPlayerInfo.currentGuard > 0)
+            {
+                int guardReduction = Mathf.Min(damage, currentPlayerInfo.currentGuard);
+                currentPlayerInfo.currentGuard -= guardReduction;
+                damage -= guardReduction;
+            }
             currentPlayerInfo.currentHp = Mathf.Max(0, currentPlayerInfo.currentHp - damage);
             buiManager.AddLog($"<color=#99FF99>당신</color>에게 <color=red>{damage}</color>의 피해를 입혔다!");
             GameUiManager.Instance.UpdatePlayerHPUI_battle(currentPlayerInfo.currentHp);
@@ -823,6 +900,24 @@ public class BattleManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.8f);
     }
+
+    /// <summary>
+    /// 플레이어에게 방어도를 부여한다.
+    /// 방어도는 적의 피해를 체력보다 먼저 받는다.
+    /// </summary>
+    public int GainPlayerGuard(int amount)
+    {
+        if (currentPlayerInfo == null ||
+            amount <= 0)
+        {
+            return 0;
+        }
+
+        currentPlayerInfo.currentGuard += amount;
+
+        return amount;
+    }
+
 
     public void BattleStart(Monster_So monster_data)
     {
@@ -994,31 +1089,18 @@ public class BattleManager : MonoBehaviour
                  currentMonsterInfo.buffatk) *
                 currentMonsterInfo.multatk;
 
-            float defense =
-                (currentPlayerInfo.defense +
-                 currentPlayerInfo.buffdef) *
-                currentPlayerInfo.multdef;
-
+            // 데미지 계산식에 방어력 제거 
             int damage =
                 CalculateDamage(
                     attack,
-                    defense,
+                    0f,
                     damageMultiplier);
 
-            currentPlayerInfo.currentHp =
-                Mathf.Max(
-                    0,
-                    currentPlayerInfo.currentHp - damage);
-
-            buiManager.AddLog(
-                $"<color=#99FF99>당신</color>에게 " +
-                $"<color=red>{damage}</color>의 피해를 입혔다!");
-
-            GameUiManager.Instance
-                .UpdatePlayerHPUI_battle(
-                    currentPlayerInfo.currentHp);
-
+            //이펙트 연출
             buiManager.MonsterAttackEffect();
+            //데미지 입힌다
+            yield return ApplyDamageToPlayer(damage);
+
 
             if (currentPlayerInfo.currentHp <= 0)
             {
@@ -1458,14 +1540,11 @@ public class BattleManager : MonoBehaviour
              currentMonsterInfo.buffatk) *
             currentMonsterInfo.multatk;
 
-        float defense =
-            (currentPlayerInfo.defense +
-             currentPlayerInfo.buffdef) *
-            currentPlayerInfo.multdef;
-
+        // 방어도는 별도 자원이며,
+        // 기척에는 방어도 적용 전 공격 피해를 표시한다.
         return CalculateDamage(
             attack,
-            defense,
+            0f,
             damageMultiplier);
     }
 }

@@ -49,14 +49,25 @@ public sealed class BattleSkillState
     // 사용가능 여부 호출
     public bool CanUseActive()
     {
-        return !UsedActiveThisTurn && 
+        // 기본기가 아닌 Manual 스킬은 한 차례에 한 번만 사용 가능
+        bool alreadyUsed =
+            UsedActiveThisTurn &&
+            !Data.isBasicSkill;
+
+        return
+            !alreadyUsed &&
             CooldownRemaining <= 0;
     }
 
     // 액티브 스킬을 사용하고 난 뒤에 호출
     public void MarkActiveUsed()
     {
-        UsedActiveThisTurn = true;
+        // 일반 무공만 이번 차례 사용 완료로 기록한다.
+        // 기본기는 행동력만 충분하면 반복 사용 가능하다.
+        if (!Data.isBasicSkill)
+        {
+            UsedActiveThisTurn = true;
+        }
 
 
         SkillLevelData levelData = Data.GetLevelData(Level);
@@ -67,9 +78,13 @@ public sealed class BattleSkillState
             return;
         }
 
-        // +1을 해두는 이유: 다음 턴 시작 때 바로 1 감소하기 때문
-        CooldownRemaining =
-            levelData.cooldownTurns + 1;
+        // 실제 쿨타임이 있는 스킬만 쿨타임을 시작한다.
+        // 쿨타임 0인 기본기에는 CooldownRemaining 1을 넣지 않는다.
+        if (levelData.cooldownTurns > 0)
+        {
+            CooldownRemaining =
+                levelData.cooldownTurns + 1;
+        }
     }
 
 

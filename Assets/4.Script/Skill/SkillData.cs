@@ -21,6 +21,10 @@ public class SkillData : ScriptableObject
     [LabelText("레어도")]
     public Rarity rarity;
 
+    [LabelText("기본기")]
+    [Tooltip("기본기는 행동력만 충분하면 같은 차례에 반복 사용할 수 있다.")]
+    public bool isBasicSkill;
+
     [LabelText("태그")]
     [EnumToggleButtons]
     public SkillTag tags;

@@ -1,6 +1,7 @@
 using DG.Tweening;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -45,6 +46,21 @@ public class BattleUiManager : MonoBehaviour
     [SerializeField] private TMP_Text enemyActionNameText;
     [SerializeField] private Transform enemyEffectContent;
     [SerializeField] private EnemyIntentEffectUI enemyEffectPrefab;
+    //적의 버프/디버프를 표시할 ui
+    [SerializeField] private Transform enemyStatusContent;
+
+    [Header("플레이어 상태 UI")]
+    [SerializeField] private Transform playerStatusContent;
+    [SerializeField] private BattleStatusSlotUI statusSlotPrefab;
+    [SerializeField] private int initialStatusPoolSize = 10;
+    // 현재 화면에 표시 중인 슬롯
+    private readonly List<BattleStatusSlotUI>
+        activePlayerStatusSlots = new();
+
+    // 사용하지 않고 대기 중인 슬롯
+    private readonly Queue<BattleStatusSlotUI>
+        inactivePlayerStatusSlots = new();
+
 
     [Header("적 행동 아이콘")]
     [SerializeField] private Sprite attackIcon;
@@ -99,6 +115,9 @@ private IEnumerator ScrollToBottom()
         originPosition = monsterSprite.transform.localPosition;
         originColor = monsterSprite.color;
         monsterBaseScale = monsterSprite.transform.localScale;
+
+        //전투 상태 슬롯 풀 초기화
+        InitializeStatusSlotPool();
     }
 
     public void BattleUiRefresh()
@@ -110,6 +129,9 @@ private IEnumerator ScrollToBottom()
     {
         ClearLog();
         ResetMonsterVisual();
+
+        // 이전 전투에서 생성된 상태 슬롯을 제거한다.
+        ClearBattleStatusUI();
 
         monsterName.text = monsinfo.name;
 
@@ -423,7 +445,213 @@ private IEnumerator ScrollToBottom()
         }
     }
 
- 
+    /// <summary>
+    /// 상태 UI 슬롯을 미리 생성한다.
+    /// 상태 변경 중 Instantiate가 반복되지 않도록 전투 전에 준비한다.
+    /// </summary>
+    private void InitializeStatusSlotPool()
+    {
+        for (int i = 0;i < initialStatusPoolSize;i++)
+        {
+            BattleStatusSlotUI slot =
+                Instantiate(
+                    statusSlotPrefab,
+                    playerStatusContent);
+
+            slot.Release();
+
+            inactivePlayerStatusSlots.Enqueue(slot);
+        }
+    }
+
+    /// <summary>
+    /// 사용하지 않는 슬롯을 반환한다.
+    /// 준비한 슬롯이 모두 사용 중이면 하나를 추가 생성해 풀을 확장한다.
+    /// </summary>
+    private BattleStatusSlotUI GetPlayerStatusSlot()
+    {
+        if (inactivePlayerStatusSlots.Count > 0)
+        {
+            return inactivePlayerStatusSlots.Dequeue();
+        }
+
+        // 상태가 예상보다 많아져도 표시가 누락되지 않게
+        // 필요한 경우에만 풀을 한 칸 확장한다.
+        return Instantiate(
+            statusSlotPrefab,
+            playerStatusContent);
+    }
+
+    /// <summary>
+    /// 지정한 상태의 슬롯이 있으면 수치만 갱신하고,
+    /// 없으면 풀에서 빈 슬롯을 꺼내 새로 연결한다.
+    /// </summary>
+    public void UpdatePlayerStatusUI(
+        BattleStatusState state)
+    {
+        if (state == null ||
+            state.Data == null)
+        {
+            return;
+        }
+
+        // 수치가 0 이면 표시할 필요가 없으므로 제거한다.
+        if (state.Amount == 0)
+        {
+            RemovePlayerStatusUI(
+                state.Data.type);
+
+            return;
+        }
+
+        foreach (BattleStatusSlotUI slot
+            in activePlayerStatusSlots)
+        {
+            if (slot.IsBoundTo(
+                state.Data.type))
+            {
+                // 이미 존재하는 상태는 슬롯을 다시 만들지 않고
+                // 현재 수치와 아이콘만 갱신한다.
+                slot.Setup(state);
+                return;
+            }
+        }
+
+        // 처음 추가된 상태이므로 빈 슬롯을 가져온다.
+        BattleStatusSlotUI newSlot =
+            GetPlayerStatusSlot();
+
+        newSlot.Setup(state);
+
+        activePlayerStatusSlots.Add(
+            newSlot);
+    }
+
+    /// <summary>
+    /// 지정한 타입의 상태 슬롯을 화면에서 제거하고
+    /// 재사용할 수 있도록 비활성 풀에 반환한다.
+    /// </summary>
+    public void RemovePlayerStatusUI(
+        BattleStatusType type)
+    {
+        for (int i =
+                 activePlayerStatusSlots.Count - 1;
+             i >= 0;
+             i--)
+        {
+            BattleStatusSlotUI slot =
+                activePlayerStatusSlots[i];
+
+            if (!slot.IsBoundTo(type))
+            {
+                continue;
+            }
+
+            activePlayerStatusSlots.RemoveAt(i);
+
+            slot.Release();
+
+            inactivePlayerStatusSlots.Enqueue(slot);
+
+            return;
+        }
+    }
+
+
+    /// <summary>
+    /// 현재 플레이어에게 적용 중인 상태를
+    /// 내 상태 영역에 다시 표시한다.
+    /// </summary>
+    public void RefreshPlayerStatusUI(
+        List<BattleStatusState> statuses)
+    {
+        RebuildStatusUI(
+            playerStatusContent,
+            statuses);
+    }
+
+    /// <summary>
+    /// 현재 적에게 적용 중인 상태를
+    /// 적 상태 영역에 다시 표시한다.
+    /// 적 상태 시스템 연결 후 사용한다.
+    /// </summary>
+    public void RefreshEnemyStatusUI(
+        List<BattleStatusState> statuses)
+    {
+        RebuildStatusUI(
+            enemyStatusContent,
+            statuses);
+    }
+
+    /// <summary>
+    /// 지정한 상태 표시 영역을 비우고
+    /// 현재 상태 목록으로 슬롯을 다시 생성한다.
+    /// 상태 변경은 자주 일어나지 않으므로 지금은 풀링하지 않는다.
+    /// </summary>
+    private void RebuildStatusUI(
+        Transform content,
+        List<BattleStatusState> statuses)
+    {
+        if (content == null)
+        {
+            return;
+        }
+
+        ClearStatusUI(content);
+
+        if (statuses == null)
+        {
+            return;
+        }
+
+        foreach (BattleStatusState status
+            in statuses)
+        {
+            if (status == null ||
+                status.Data == null ||
+                status.Amount <= 0)
+            {
+                continue;
+            }
+
+            BattleStatusSlotUI slot =
+                Instantiate(
+                    statusSlotPrefab,
+                    content);
+
+            slot.Setup(status);
+        }
+    }
+
+    /// <summary>
+    /// 지정한 영역에 생성된 기존 상태 슬롯을 모두 제거한다.
+    /// 같은 프레임에 다시 갱신되어도 이전 슬롯이 화면에 남지 않게
+    /// 먼저 비활성화한 뒤 제거한다.
+    /// </summary>
+    private void ClearStatusUI(
+        Transform content)
+    {
+        if (content == null)
+        {
+            return;
+        }
+
+        foreach (Transform child
+            in content)
+        {
+            child.gameObject.SetActive(false);
+            Destroy(child.gameObject);
+        }
+    }
+
+    /// <summary>
+    /// 새로운 전투가 시작될 때 이전 전투의 상태 표시를 제거한다.
+    /// </summary>
+    public void ClearBattleStatusUI()
+    {
+        ClearStatusUI(playerStatusContent);
+        ClearStatusUI(enemyStatusContent);
+    }
 
     public void MonsterAttackEffect()
     {

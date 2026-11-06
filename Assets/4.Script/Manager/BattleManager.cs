@@ -131,10 +131,6 @@ public class BattleManager : MonoBehaviour
         // 활력은 매 차례 첫 타격에만 적용되므로 턴 시작 시 false로 초기화한다.
         public bool hasAttackedThisTurn;
 
-
-        // 이번 플레이어 차례에 활력이 이미 발동했는지
-        public bool vigorTriggeredThisTurn;
-
         public PlayerSetInfo(PlayerData player)
         {
             PlayerStats stats = player.stats;
@@ -278,6 +274,8 @@ public class BattleManager : MonoBehaviour
 
         // UI 매니저에게 요청
         buiManager.BattleUiSetting(currentMonsterInfo);
+
+        buiManager.RefreshPlayerStatusUI(currentPlayerInfo.statuses);
 
         buiManager.AddLogImmediate(
             $"─── 제{PlayerActionCount}합 · 내 차례 ───");
@@ -473,7 +471,7 @@ public class BattleManager : MonoBehaviour
         GameUiManager.Instance.UpdateGuardUI(0);
 
         // 활력은 매 플레이어 차례 첫 타격에 다시 발동할 수 있다.
-        currentPlayerInfo.vigorTriggeredThisTurn = false;
+        currentPlayerInfo.hasAttackedThisTurn = false;
 
         // 스킬 사용 여부 초기화 + 쿨타임 감소
         foreach (BattleSkillState state in playerSkillStates)
@@ -1659,8 +1657,48 @@ public class BattleManager : MonoBehaviour
         }
         else
         {
+            // 같은 상태가 이미 존재하면
+            // 슬롯을 추가하지 않고 현재 수치만 누적한다.
             status.Amount += amount;
         }
+
+        // 변경된 상태 슬롯을 추가하거나 갱신한다.
+        buiManager.UpdatePlayerStatusUI(status);
+
+        return status.Amount;
+    }
+
+    /// <summary>
+    /// 지정한 플레이어 상태의 수치를 변경한다.
+    /// 결과가 0이 되면 상태 데이터와 UI를 함께 제거한다.
+    /// </summary>
+    public int ChangePlayerStatusAmount(
+        BattleStatusType type,
+        int amount)
+    {
+        BattleStatusState status =
+            GetPlayerStatus(type);
+
+        if (status == null)
+        {
+            return 0;
+        }
+
+        status.Amount += amount;
+
+        if (status.Amount == 0)
+        {
+            currentPlayerInfo.statuses.Remove(
+                status);
+
+            buiManager.RemovePlayerStatusUI(
+                type);
+
+            return 0;
+        }
+
+        buiManager.UpdatePlayerStatusUI(
+            status);
 
         return status.Amount;
     }

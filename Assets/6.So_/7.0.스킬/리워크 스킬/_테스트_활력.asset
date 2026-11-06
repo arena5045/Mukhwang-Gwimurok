@@ -28,11 +28,12 @@ MonoBehaviour:
     initialCooldownTurns: 0
     conditions: []
     effects:
-    - rid: 2610651933187506249
+    - rid: 2610651976837103691
   references:
     version: 2
     RefIds:
-    - rid: 2610651933187506249
-      type: {class: GainVigorEffect, ns: , asm: Assembly-CSharp}
+    - rid: 2610651976837103691
+      type: {class: GainBattleStatusEffect, ns: , asm: Assembly-CSharp}
       data:
+        statusData: {fileID: 11400000, guid: e3403864bbc4e524ab0fa53c5d58855d, type: 2}
         amount: 10

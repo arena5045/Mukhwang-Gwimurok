@@ -35,5 +35,5 @@ MonoBehaviour:
     - rid: 2610651976837103690
       type: {class: GainBattleStatusEffect, ns: , asm: Assembly-CSharp}
       data:
-        statusData: {fileID: 0}
-        amount: 1
+        statusData: {fileID: 11400000, guid: 9631feff2ecce4545957102fb88b061a, type: 2}
+        amount: 3

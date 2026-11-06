@@ -124,6 +124,16 @@ public class BattleManager : MonoBehaviour
         public float speed;
         public float buffspeed;
         public float multspeed;
+        // 이번 전투에서 플레이어에게 적용 중인 상태 목록.
+        // 같은 상태가 다시 들어오면 새 항목을 만들지 않고 Amount만 누적한다.
+        public List<BattleStatusState> statuses = new();
+        // 이번 플레이어 차례에 이미 공격 타격이 발생했는지 기록.
+        // 활력은 매 차례 첫 타격에만 적용되므로 턴 시작 시 false로 초기화한다.
+        public bool hasAttackedThisTurn;
+
+
+        // 이번 플레이어 차례에 활력이 이미 발동했는지
+        public bool vigorTriggeredThisTurn;
 
         public PlayerSetInfo(PlayerData player)
         {
@@ -157,6 +167,9 @@ public class BattleManager : MonoBehaviour
             speed = stats.TotalSpeed;
             buffspeed = 0;
             multspeed = 1f;
+
+            //활력 기세와 같은 배틀스텟
+            hasAttackedThisTurn = false;
         }
     }
 
@@ -241,8 +254,9 @@ public class BattleManager : MonoBehaviour
         currentPlayerInfo =
             new PlayerSetInfo(GameManager.Instance.Context.player);
 
-        //mp값 한번 갱신
+        //ui값 한번 갱신
         GameUiManager.Instance.UpdatePlayerMPUI_battle(currentPlayerInfo.currentmp, false);
+        GameUiManager.Instance.UpdateGuardUI(0);
 
         // 아직 일차별 난이도 규칙은 사용하지 않는다. MonsterSetInfo가
         // Monster_So의 원본 전투 능력치를 그대로 복사하도록 유지한다.
@@ -456,6 +470,10 @@ public class BattleManager : MonoBehaviour
 
         // 이전 적 차례에서 남은 방어도 제거
         currentPlayerInfo.currentGuard = 0;
+        GameUiManager.Instance.UpdateGuardUI(0);
+
+        // 활력은 매 플레이어 차례 첫 타격에 다시 발동할 수 있다.
+        currentPlayerInfo.vigorTriggeredThisTurn = false;
 
         // 스킬 사용 여부 초기화 + 쿨타임 감소
         foreach (BattleSkillState state in playerSkillStates)
@@ -733,9 +751,13 @@ public class BattleManager : MonoBehaviour
                 currentPlayerInfo.currentGuard,
                 damage);
 
+        //방어도계산 후 ui갱신
         currentPlayerInfo.currentGuard -=
             blockedDamage;
 
+        GameUiManager.Instance.UpdateGuardUI(currentPlayerInfo.currentGuard);
+
+        //최종 다는 hp계산
         int hpDamage =
             damage - blockedDamage;
 
@@ -799,6 +821,24 @@ public class BattleManager : MonoBehaviour
             float attack = (currentPlayerInfo.addmg + currentPlayerInfo.buffad) * currentPlayerInfo.multad;
             float defense = (currentMonsterInfo.def + currentMonsterInfo.buffdef) * currentMonsterInfo.multdef;
             int damage = CalculateDamage(attack, defense, damageMultiplier);
+
+            //기세 계산
+            int momentum =
+                GetPlayerStatusAmount(
+                    BattleStatusType.Momentum);
+
+            damage += momentum;
+            //활력 계산
+            if (!currentPlayerInfo.hasAttackedThisTurn)
+            {
+                int vigor =
+                    GetPlayerStatusAmount(
+                        BattleStatusType.Vigor);
+
+                damage += vigor;
+
+                currentPlayerInfo.hasAttackedThisTurn = true;
+            }
 
             currentMonsterInfo.currentHp = Mathf.Max(0, currentMonsterInfo.currentHp - damage);
             buiManager.AddLog($"<color=red>{currentMonsterInfo.name}</color>에게 <color=red>{damage}</color>의 피해를 입혔다!");
@@ -914,6 +954,8 @@ public class BattleManager : MonoBehaviour
         }
 
         currentPlayerInfo.currentGuard += amount;
+
+        GameUiManager.Instance.UpdateGuardUI(currentPlayerInfo.currentGuard);
 
         return amount;
     }
@@ -1547,4 +1589,80 @@ public class BattleManager : MonoBehaviour
             0f,
             damageMultiplier);
     }
+
+
+    /// <summary>
+    /// 현재 플레이어에게 적용 중인 상태 중
+    /// 지정한 타입의 상태를 찾아 반환한다.
+    /// 없으면 null을 반환한다.
+    /// </summary>
+    public BattleStatusState GetPlayerStatus(
+    BattleStatusType type)
+    {
+        if (currentPlayerInfo == null)
+        {
+            return null;
+        }
+
+        foreach (BattleStatusState status
+            in currentPlayerInfo.statuses)
+        {
+            if (status.Data != null &&
+                status.Data.type == type)
+            {
+                return status;
+            }
+        }
+
+        return null;
+    }
+
+    //스테이터스에서 특정 타입의 값을 확인한다.
+    public int GetPlayerStatusAmount(
+    BattleStatusType type)
+    {
+        BattleStatusState status =
+            GetPlayerStatus(type);
+
+        return status != null
+            ? status.Amount
+            : 0;
+    }
+
+    /// <summary>
+    /// 플레이어에게 상태를 추가한다.
+    /// 이미 같은 상태가 존재하면 새 상태를 만들지 않고 수치만 누적한다.
+    /// </summary>
+    public int AddPlayerStatus(
+    BattleStatusData data,
+    int amount)
+    {
+        if (currentPlayerInfo == null ||
+            data == null ||
+            amount <= 0)
+        {
+            return 0;
+        }
+
+        BattleStatusState status =
+            GetPlayerStatus(data.type);
+
+        if (status == null)
+        {
+            status =
+                new BattleStatusState(
+                    data,
+                    amount);
+
+            currentPlayerInfo.statuses.Add(
+                status);
+        }
+        else
+        {
+            status.Amount += amount;
+        }
+
+        return status.Amount;
+    }
+
 }

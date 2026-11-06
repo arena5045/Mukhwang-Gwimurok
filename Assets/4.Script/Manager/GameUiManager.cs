@@ -27,6 +27,11 @@ public class GameUiManager : MonoBehaviour
     public TMP_Text playerGoldText;
     public TMP_Text playerSoulText;
 
+    [Header("방어도 UI")]
+    [SerializeField] private GameObject guardUI;
+    [SerializeField] private TMP_Text guardText;
+
+
     [Header("경지")]
     public Image playerExpBar;
     public TMP_Text playerRealmText;
@@ -212,14 +217,16 @@ public class GameUiManager : MonoBehaviour
     {
         GameContext context = GameManager.Instance.Context;
 
-        playerhpText.text = $"체력 : {context.player.currentHP} / {context.player.stats.MaxHp}";
+        playerhpText.text =
+            $"{context.player.currentHP} / {context.player.stats.MaxHp}";
         // 정수끼리 나누면 중간 체력이 모두 0으로 잘리므로 float로 변환한다.
         // 최대치가 잘못 설정된 콘텐츠도 0으로 나누지 않도록 별도로 방어한다.
         playerhpBar.fillAmount = context.player.stats.MaxHp > 0
             ? (float)context.player.currentHP / context.player.stats.MaxHp
             : 0f;
 
-        playempText.text = $"도력 : {context.player.currentMp} / {context.player.stats.MaxMp}";
+        playempText.text =
+            $"{context.player.currentMp} / {context.player.stats.MaxMp}";
         playermpBar.fillAmount = context.player.stats.MaxMp > 0
             ? (float)context.player.currentMp / context.player.stats.MaxMp
             : 0f;
@@ -229,6 +236,18 @@ public class GameUiManager : MonoBehaviour
 
         UpdateExpUi();
     }
+    public void UpdateGuardUI(int guard)
+    {
+        bool hasGuard = guard > 0;
+
+        guardUI.SetActive(hasGuard);
+
+        if (hasGuard)
+        {
+            guardText.text = guard.ToString();
+        }
+    }
+
 
     public void UpdateGoldUi()
     {
@@ -364,7 +383,8 @@ public class GameUiManager : MonoBehaviour
         // 3. 텍스트 업데이트 (체력이 음수로 찍히지 않도록 방어)
         int displayHp = Mathf.Max(0, current);
 
-        playerhpText.text = $"체력 : {displayHp}";
+        playerhpText.text =
+            $"{displayHp} / {maxhp}";
     }
 
     //hp 회복시
@@ -387,7 +407,7 @@ public class GameUiManager : MonoBehaviour
         }
 
         playerhpText.text =
-            $"체력 : {Mathf.Max(0, current)}";
+            $"{Mathf.Max(0, current)} / {maxhp}";
     }
 
     public void UpdatePlayerMPUI_battle(

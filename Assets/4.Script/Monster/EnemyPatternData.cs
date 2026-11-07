@@ -23,6 +23,21 @@ public enum EnemyPatternMode
 }
 
 /// <summary>
+/// 몬스터 행동의 상태 효과가 적용될 대상.
+/// 몬스터 행동은 항상 몬스터가 시전자이므로
+/// Self는 몬스터, Opponent는 플레이어를 뜻한다.
+/// </summary>
+public enum EnemyStatusTarget
+{
+    [LabelText("자신")]
+    Self,
+
+    [LabelText("상대")]
+    Opponent
+}
+
+
+/// <summary>
 /// 적 행동에 포함할 수 있는 효과 종류.
 /// </summary>
 public enum EnemyActionEffectType
@@ -41,6 +56,9 @@ public enum EnemyActionEffectType
 
     [LabelText("체력 증가")]
     GainHealth,
+
+    [LabelText("전투 상태 적용")]
+    ApplyBattleStatus
 }
 
 /// <summary>
@@ -71,6 +89,24 @@ public class EnemyActionEffectData
         nameof(effectType),
         EnemyActionEffectType.Attack)]
     public float amount;
+    // 추가 상태이상이 있는 경우
+    [LabelText("상태 적용 대상")]
+    [ShowIf(
+    nameof(effectType),
+    EnemyActionEffectType.ApplyBattleStatus)]
+    public EnemyStatusTarget statusTarget;
+
+    [LabelText("적용 상태")]
+    [ShowIf(
+        nameof(effectType),
+        EnemyActionEffectType.ApplyBattleStatus)]
+    public BattleStatusData statusData;
+
+    [LabelText("상태 변화량")]
+    [ShowIf(
+        nameof(effectType),
+        EnemyActionEffectType.ApplyBattleStatus)]
+    public int statusAmount;
 }
 
 /// <summary>

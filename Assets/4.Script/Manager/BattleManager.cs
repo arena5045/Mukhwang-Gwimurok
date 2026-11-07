@@ -64,6 +64,10 @@ public class BattleManager : MonoBehaviour
         public float buffspeed = 0f;
         public float multspeed = 1f;
 
+        // 이번 전투에서 적에게 적용 중인 상태 목록.
+        // 같은 상태가 다시 적용되면 새 항목을 만들지 않고 Amount를 누적한다.
+        public List<BattleStatusState> statuses = new();
+
         public float imgsize;
 
         public float run_pro;
@@ -837,6 +841,8 @@ public class BattleManager : MonoBehaviour
 
                 currentPlayerInfo.hasAttackedThisTurn = true;
             }
+            //딜이 0미만으로 되진않음
+            damage = Mathf.Max(0, damage);
 
             currentMonsterInfo.currentHp = Mathf.Max(0, currentMonsterInfo.currentHp - damage);
             buiManager.AddLog($"<color=red>{currentMonsterInfo.name}</color>에게 <color=red>{damage}</color>의 피해를 입혔다!");
@@ -1042,6 +1048,11 @@ public class BattleManager : MonoBehaviour
     /// 현재 적의 기척에 예고된 행동을 실제로 실행한다.
     /// 등록된 효과를 위에서부터 순서대로 처리한다.
     /// </summary>
+    /// <summary>
+    /// 현재 적의 기척에 예고된 행동을 실제로 실행한다.
+    /// 행동 시작과 종료의 대기는 한 번만 적용하고,
+    /// 복합 효과 사이에는 짧은 간격만 둔다.
+    /// </summary>
     private IEnumerator ExecuteCurrentEnemyAction()
     {
         if (currentEnemyAction == null)
@@ -1053,9 +1064,20 @@ public class BattleManager : MonoBehaviour
             $"<color=red>{currentMonsterInfo.name}</color>의 " +
             $"{currentEnemyAction.actionName}!");
 
-        foreach (EnemyActionEffectData effect
-            in currentEnemyAction.effects)
+        // 행동 이름을 확인한 뒤 첫 효과가 실행되도록
+        // 행동 전체에 한 번만 선딜을 적용한다.
+        yield return new WaitForSeconds(0.5f);
+
+        List<EnemyActionEffectData> effects =
+            currentEnemyAction.effects;
+
+        for (int effectIndex = 0;
+             effectIndex < effects.Count;
+             effectIndex++)
         {
+            EnemyActionEffectData effect =
+                effects[effectIndex];
+
             if (effect == null)
             {
                 continue;
@@ -1064,53 +1086,101 @@ public class BattleManager : MonoBehaviour
             switch (effect.effectType)
             {
                 case EnemyActionEffectType.Attack:
+                    {
+                        yield return ExecuteMonsterAttackEffect(
+                            effect.damageMultiplier,
+                            effect.hitCount);
 
-                    yield return ExecuteMonsterAttackEffect(
-                        effect.damageMultiplier,
-                        effect.hitCount);
-
-                    break;
+                        break;
+                    }
 
                 case EnemyActionEffectType.GainAttack:
-                    //선딜 
-                    yield return new WaitForSeconds(0.5f);
+                    {
+                        currentMonsterInfo.buffatk +=
+                            effect.amount;
 
-                    currentMonsterInfo.buffatk +=
-                        effect.amount;
+                        buiManager.AddLog(
+                            $"<color=red>{currentMonsterInfo.name}</color>의 " +
+                            $"공격력이 {effect.amount:0.#} 증가했다!");
 
-                    buiManager.AddLog(
-                        $"<color=red>{currentMonsterInfo.name}</color>의 " +
-                        $"공격력이 {effect.amount:0.#} 증가했다!");
-
-                    // 강화 로그를 확인할 시간
-                    yield return new WaitForSeconds(0.8f);
-
-                    break;
+                        break;
+                    }
 
                 case EnemyActionEffectType.GainDefense:
-                    //선딜 
-                    yield return new WaitForSeconds(0.5f);
+                    {
+                        currentMonsterInfo.buffdef +=
+                            effect.amount;
 
-                    currentMonsterInfo.buffdef +=
-                        effect.amount;
+                        buiManager.AddLog(
+                            $"<color=red>{currentMonsterInfo.name}</color>의 " +
+                            $"방어력이 {effect.amount:0.#} 증가했다!");
 
-                    buiManager.AddLog(
-                        $"<color=red>{currentMonsterInfo.name}</color>의 " +
-                        $"방어력이 {effect.amount:0.#} 증가했다!");
+                        break;
+                    }
 
-                    // 강화 로그를 확인할 시간
-                    yield return new WaitForSeconds(0.8f);
+                case EnemyActionEffectType.ApplyBattleStatus:
+                    {
+                        if (effect.statusData == null ||
+                            effect.statusAmount == 0)
+                        {
+                            continue;
+                        }
 
-                    break;
+                        bool targetsSelf =
+                            effect.statusTarget ==
+                            EnemyStatusTarget.Self;
+
+                        if (targetsSelf)
+                        {
+                            AddMonsterStatus(
+                                effect.statusData,
+                                effect.statusAmount);
+                        }
+                        else
+                        {
+                            AddPlayerStatus(
+                                effect.statusData,
+                                effect.statusAmount);
+                        }
+
+                        string targetName =
+                            targetsSelf
+                            ? $"<color=red>{currentMonsterInfo.name}</color>"
+                            : "<color=#99FF99>당신</color>";
+
+                        string changeText =
+                            effect.statusAmount > 0
+                            ? "증가했다."
+                            : "감소했다.";
+
+                        buiManager.AddLog(
+                            $"{targetName}의 " +
+                            $"{effect.statusData.statusName}가 " +
+                            $"<color=#99FF99>" +
+                            $"{Mathf.Abs(effect.statusAmount)}</color> " +
+                            $"{changeText}");
+
+                        break;
+                    }
             }
 
-            // 공격 도중 플레이어가 쓰러졌으면
-            // 뒤의 효과는 더 실행하지 않는다.
+            // 공격 중 플레이어가 쓰러졌다면
+            // 이후 효과는 실행하지 않는다.
             if (currentPlayerInfo.currentHp <= 0)
             {
-                yield break;
+                break;
+            }
+
+            // 복합 행동의 각 효과가 동시에 출력되지 않도록
+            // 다음 효과와 짧은 간격만 둔다.
+            if (effectIndex < effects.Count - 1)
+            {
+                yield return new WaitForSeconds(0.35f);
             }
         }
+
+        // 마지막 효과와 다음 플레이어 차례 사이의 확인 시간.
+        yield return new WaitForSeconds(0.8f);
     }
 
 
@@ -1118,7 +1188,6 @@ public class BattleManager : MonoBehaviour
     float damageMultiplier,
     int hitCount)
     {
-        yield return new WaitForSeconds(0.5f);
 
         for (int hitIndex = 0;
              hitIndex < hitCount;
@@ -1135,6 +1204,19 @@ public class BattleManager : MonoBehaviour
                     attack,
                     0f,
                     damageMultiplier);
+
+            // 적의 기세는 모든 실제 공격 타격에 적용된다.
+            // 음수 기세는 디버프로 작동해 피해량을 감소시킨다.
+            damage +=
+                GetMonsterStatusAmount(
+                    BattleStatusType.Momentum);
+
+            // 최종 피해가 음수가 되어
+            // 플레이어 체력을 회복시키는 상황을 방지한다.
+            damage = Mathf.Max(
+                0,
+                damage);
+
 
             //이펙트 연출
             buiManager.MonsterAttackEffect();
@@ -1153,7 +1235,6 @@ public class BattleManager : MonoBehaviour
             }
         }
 
-        yield return new WaitForSeconds(0.8f);
     }
 
 
@@ -1580,12 +1661,23 @@ public class BattleManager : MonoBehaviour
              currentMonsterInfo.buffatk) *
             currentMonsterInfo.multatk;
 
-        // 방어도는 별도 자원이며,
-        // 기척에는 방어도 적용 전 공격 피해를 표시한다.
-        return CalculateDamage(
-            attack,
-            0f,
-            damageMultiplier);
+        int damage =
+            CalculateDamage(
+                attack,
+                0f,
+                damageMultiplier);
+
+        // 적의 기세는 모든 공격 타격의
+        // 최종 피해에 고정 수치로 적용된다.
+        damage +=
+            GetMonsterStatusAmount(
+                BattleStatusType.Momentum);
+
+        // 음수 기세로 피해가 0 아래로 내려가더라도
+        // 플레이어를 회복시키지는 않는다.
+        return Mathf.Max(
+            0,
+            damage);
     }
 
 
@@ -1637,7 +1729,7 @@ public class BattleManager : MonoBehaviour
     {
         if (currentPlayerInfo == null ||
             data == null ||
-            amount <= 0)
+            amount == 0)
         {
             return 0;
         }
@@ -1660,6 +1752,19 @@ public class BattleManager : MonoBehaviour
             // 같은 상태가 이미 존재하면
             // 슬롯을 추가하지 않고 현재 수치만 누적한다.
             status.Amount += amount;
+        }
+
+        // 강화와 약화가 상쇄되어 정확히 0이 되면
+        // 의미 없는 상태이므로 데이터와 UI에서 제거한다.
+        if (status.Amount == 0)
+        {
+            currentPlayerInfo.statuses.Remove(
+                status);
+
+            buiManager.RemovePlayerStatusUI(
+                data.type);
+
+            return 0;
         }
 
         // 변경된 상태 슬롯을 추가하거나 갱신한다.
@@ -1701,6 +1806,127 @@ public class BattleManager : MonoBehaviour
             status);
 
         return status.Amount;
+    }
+
+
+    /// <summary>
+    /// 현재 적에게 적용 중인 상태에서
+    /// 지정한 타입의 상태를 찾아 반환한다.
+    /// 상태가 없으면 null을 반환한다.
+    /// </summary>
+    public BattleStatusState GetMonsterStatus(
+        BattleStatusType type)
+    {
+        if (currentMonsterInfo == null)
+        {
+            return null;
+        }
+
+        foreach (BattleStatusState status
+            in currentMonsterInfo.statuses)
+        {
+            if (status.Data != null &&
+                status.Data.type == type)
+            {
+                return status;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// 현재 적에게 적용 중인 지정 상태의 수치를 반환한다.
+    /// 상태가 없으면 0을 반환한다.
+    /// </summary>
+    public int GetMonsterStatusAmount(
+        BattleStatusType type)
+    {
+        BattleStatusState status =
+            GetMonsterStatus(type);
+
+        return status != null
+            ? status.Amount
+            : 0;
+    }
+
+    /// <summary>
+    /// 현재 적에게 상태 변화량을 적용한다.
+    /// 양수는 강화, 음수는 약화로 처리하며
+    /// 최종 수치가 0이면 상태 데이터와 UI를 함께 제거한다.
+    /// </summary>
+    public int AddMonsterStatus(
+        BattleStatusData data,
+        int amount)
+    {
+        if (currentMonsterInfo == null ||
+            data == null ||
+            amount == 0)
+        {
+            return 0;
+        }
+
+        BattleStatusState status =
+            GetMonsterStatus(data.type);
+
+        if (status == null)
+        {
+            // 기존 상태가 없으면 양수·음수 모두
+            // 전달받은 값을 시작 수치로 새 상태를 생성한다.
+            status =
+                new BattleStatusState(
+                    data,
+                    amount);
+
+            currentMonsterInfo.statuses.Add(
+                status);
+        }
+        else
+        {
+            // 같은 상태가 이미 존재하면
+            // 새 슬롯을 만들지 않고 현재 수치에 누적한다.
+            status.Amount += amount;
+        }
+
+        // 강화와 약화가 정확히 상쇄되면
+        // 상태가 존재할 의미가 없으므로 제거한다.
+        if (status.Amount == 0)
+        {
+            currentMonsterInfo.statuses.Remove(
+                status);
+
+            buiManager.RemoveEnemyStatusUI(
+                data.type);
+
+            RefreshCurrentEnemyIntentUI();
+
+            return 0;
+        }
+
+        // 변경된 적 상태 슬롯 하나만 생성하거나 갱신한다.
+        buiManager.UpdateEnemyStatusUI(
+            status);
+
+        // 공격력이 바뀌었으므로 현재 기척의 예상 피해도 다시 계산한다.
+        RefreshCurrentEnemyIntentUI();
+
+        return status.Amount;
+    }
+
+    /// <summary>
+    /// 현재 예고 중인 적 행동을 다시 그린다.
+    /// 적 공격력 관련 상태가 바뀌었을 때
+    /// 기척의 예상 피해와 실제 피해가 어긋나지 않게 한다.
+    /// </summary>
+    private void RefreshCurrentEnemyIntentUI()
+    {
+        if (currentEnemyAction == null)
+        {
+            return;
+        }
+
+        buiManager.UpdateEnemyIntentUI(
+            currentEnemyAction);
     }
 
 }

@@ -48,6 +48,13 @@ public class BattleUiManager : MonoBehaviour
     [SerializeField] private EnemyIntentEffectUI enemyEffectPrefab;
     //적의 버프/디버프를 표시할 ui
     [SerializeField] private Transform enemyStatusContent;
+    // 현재 적 상태창에 표시 중인 슬롯
+    private readonly List<BattleStatusSlotUI>
+        activeEnemyStatusSlots = new();
+
+    // 사용하지 않고 대기 중인 적 상태 슬롯
+    private readonly Queue<BattleStatusSlotUI>
+        inactiveEnemyStatusSlots = new();
 
     [Header("플레이어 상태 UI")]
     [SerializeField] private Transform playerStatusContent;
@@ -118,6 +125,7 @@ private IEnumerator ScrollToBottom()
 
         //전투 상태 슬롯 풀 초기화
         InitializeStatusSlotPool();
+        InitializeEnemyStatusSlotPool();
     }
 
     public void BattleUiRefresh()
@@ -423,6 +431,32 @@ private IEnumerator ScrollToBottom()
                     $"방어력 +{effect.amount:0.#}";
                 break;
 
+            case EnemyActionEffectType.ApplyBattleStatus:
+                {
+                    if (effect.statusData == null)
+                    {
+                        return;
+                    }
+
+                    string targetText =
+                        effect.statusTarget ==
+                        EnemyStatusTarget.Self
+                        ? "자신"
+                        : "상대";
+
+                    string sign =
+                        effect.statusAmount > 0
+                        ? "+"
+                        : "";
+
+                    value =
+                        $"{targetText} " +
+                        $"{effect.statusData.statusName} " +
+                        $"{sign}{effect.statusAmount}";
+
+                    break;
+                }
+
             default:
                 return;
         }
@@ -463,6 +497,26 @@ private IEnumerator ScrollToBottom()
             inactivePlayerStatusSlots.Enqueue(slot);
         }
     }
+    /// <summary>
+    /// 적 상태 UI 슬롯을 미리 생성하고
+    /// 비활성 풀에 보관한다.
+    /// </summary>
+    private void InitializeEnemyStatusSlotPool()
+    {
+        for (int i = 0;i < initialStatusPoolSize; i++)
+        {
+            BattleStatusSlotUI slot =
+                Instantiate(
+                    statusSlotPrefab,
+                    enemyStatusContent);
+
+            slot.Release();
+
+            inactiveEnemyStatusSlots.Enqueue(
+                slot);
+        }
+    }
+
 
     /// <summary>
     /// 사용하지 않는 슬롯을 반환한다.
@@ -481,6 +535,23 @@ private IEnumerator ScrollToBottom()
             statusSlotPrefab,
             playerStatusContent);
     }
+
+    /// <summary>
+    /// 적 상태 UI에 사용할 빈 슬롯을 반환한다.
+    /// 준비한 슬롯을 모두 사용 중이면 필요한 만큼 추가 생성한다.
+    /// </summary>
+    private BattleStatusSlotUI GetEnemyStatusSlot()
+    {
+        if (inactiveEnemyStatusSlots.Count > 0)
+        {
+            return inactiveEnemyStatusSlots.Dequeue();
+        }
+
+        return Instantiate(
+            statusSlotPrefab,
+            enemyStatusContent);
+    }
+
 
     /// <summary>
     /// 지정한 상태의 슬롯이 있으면 수치만 갱신하고,
@@ -528,6 +599,50 @@ private IEnumerator ScrollToBottom()
     }
 
     /// <summary>
+    /// 지정한 적 상태의 슬롯이 있으면 숫자만 갱신하고,
+    /// 없으면 풀에서 빈 슬롯을 가져와 새로 연결한다.
+    /// </summary>
+    public void UpdateEnemyStatusUI(
+        BattleStatusState state)
+    {
+        if (state == null ||
+            state.Data == null)
+        {
+            return;
+        }
+
+        // 0인 상태는 표시할 필요가 없으므로 제거한다.
+        // 음수 상태는 적에게 걸린 디버프이므로 그대로 표시한다.
+        if (state.Amount == 0)
+        {
+            RemoveEnemyStatusUI(
+                state.Data.type);
+
+            return;
+        }
+
+        foreach (BattleStatusSlotUI slot
+            in activeEnemyStatusSlots)
+        {
+            if (slot.IsBoundTo(
+                state.Data.type))
+            {
+                slot.Setup(state);
+                return;
+            }
+        }
+
+        BattleStatusSlotUI newSlot =
+            GetEnemyStatusSlot();
+
+        newSlot.Setup(state);
+
+        activeEnemyStatusSlots.Add(
+            newSlot);
+    }
+
+
+    /// <summary>
     /// 지정한 타입의 상태 슬롯을 화면에서 제거하고
     /// 재사용할 수 있도록 비활성 풀에 반환한다.
     /// </summary>
@@ -557,17 +672,118 @@ private IEnumerator ScrollToBottom()
         }
     }
 
+    /// <summary>
+    /// 지정한 적 상태 슬롯을 화면에서 해제하고
+    /// 다시 사용할 수 있도록 비활성 풀에 반환한다.
+    /// </summary>
+    public void RemoveEnemyStatusUI(
+        BattleStatusType type)
+    {
+        for (int i =
+                 activeEnemyStatusSlots.Count - 1;
+             i >= 0;
+             i--)
+        {
+            BattleStatusSlotUI slot =
+                activeEnemyStatusSlots[i];
+
+            if (!slot.IsBoundTo(type))
+            {
+                continue;
+            }
+
+            activeEnemyStatusSlots.RemoveAt(i);
+
+            slot.Release();
+
+            inactiveEnemyStatusSlots.Enqueue(
+                slot);
+
+            return;
+        }
+    }
+
 
     /// <summary>
-    /// 현재 플레이어에게 적용 중인 상태를
-    /// 내 상태 영역에 다시 표시한다.
+    /// 현재 화면에 표시 중인 플레이어 상태 슬롯을 모두 해제하고
+    /// 다음 상태 표시에서 재사용할 수 있도록 비활성 풀에 반환한다.
+    /// 풀링 슬롯은 Destroy하지 않는다.
+    /// </summary>
+    private void ReleaseAllPlayerStatusSlots()
+    {
+        foreach (BattleStatusSlotUI slot
+            in activePlayerStatusSlots)
+        {
+            // 슬롯이 외부 요인으로 파괴된 경우에는
+            // 다시 풀에 넣지 않고 건너뛴다.
+            if (slot == null)
+            {
+                continue;
+            }
+
+            slot.Release();
+
+            inactivePlayerStatusSlots.Enqueue(
+                slot);
+        }
+
+        activePlayerStatusSlots.Clear();
+    }
+
+    /// <summary>
+    /// 현재 표시 중인 적 상태 슬롯을 모두 해제하고
+    /// 다음 전투에서 재사용할 수 있도록 풀에 반환한다.
+    /// </summary>
+    private void ReleaseAllEnemyStatusSlots()
+    {
+        foreach (BattleStatusSlotUI slot
+            in activeEnemyStatusSlots)
+        {
+            if (slot == null)
+            {
+                continue;
+            }
+
+            slot.Release();
+
+            inactiveEnemyStatusSlots.Enqueue(
+                slot);
+        }
+
+        activeEnemyStatusSlots.Clear();
+    }
+
+    /// <summary>
+    /// 실제 플레이어 상태 목록을 기준으로
+    /// 상태 슬롯 전체를 다시 연결한다.
+    /// 전투 시작, 저장 데이터 로드, 강제 UI 복구 때 사용한다.
     /// </summary>
     public void RefreshPlayerStatusUI(
         List<BattleStatusState> statuses)
     {
-        RebuildStatusUI(
-            playerStatusContent,
-            statuses);
+        // 현재 활성 슬롯을 파괴하지 않고
+        // 모두 비활성 풀로 반환한다.
+        ReleaseAllPlayerStatusSlots();
+
+        if (statuses == null)
+        {
+            return;
+        }
+
+        foreach (BattleStatusState status
+            in statuses)
+        {
+            // 양수와 음수 상태는 모두 표시하며,
+            // 정확히 0인 상태만 제외한다.
+            if (status == null ||
+                status.Data == null ||
+                status.Amount == 0)
+            {
+                continue;
+            }
+
+            UpdatePlayerStatusUI(status);
+        }
     }
 
     /// <summary>
@@ -609,7 +825,7 @@ private IEnumerator ScrollToBottom()
         {
             if (status == null ||
                 status.Data == null ||
-                status.Amount <= 0)
+                status.Amount == 0)
             {
                 continue;
             }
@@ -649,8 +865,8 @@ private IEnumerator ScrollToBottom()
     /// </summary>
     public void ClearBattleStatusUI()
     {
-        ClearStatusUI(playerStatusContent);
-        ClearStatusUI(enemyStatusContent);
+        ReleaseAllPlayerStatusSlots();
+        ReleaseAllEnemyStatusSlots();
     }
 
     public void MonsterAttackEffect()

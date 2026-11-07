@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d59b6c767153144ab5e5652e3d14d2, type: 3}
+  m_Name: "\uC704\uC555"
+  m_EditorClassIdentifier: Assembly-CSharp::SkillData
+  skillName: "\uC704\uC555"
+  skillDescription: "\uC801\uC5D0\uAC8C \uAE30\uC138 -1 \uBD80\uC5EC"
+  icon: {fileID: 5040250782774221517, guid: e35855184b9ebfe4880332287b6c059f, type: 3}
+  skillType: 0
+  rarity: 0
+  isBasicSkill: 0
+  tags: 0
+  trigger: 0
+  levels:
+  - mpCost: 0
+    maxActivationsPerAction: 1
+    actionPointCost: 1
+    cooldownTurns: 0
+    initialCooldownTurns: 0
+    conditions: []
+    effects:
+    - rid: 2610651976837103690
+  references:
+    version: 2
+    RefIds:
+    - rid: 2610651976837103690
+      type: {class: GainBattleStatusEffect, ns: , asm: Assembly-CSharp}
+      data:
+        target: 1
+        statusData: {fileID: 11400000, guid: 9631feff2ecce4545957102fb88b061a, type: 2}
+        amount: -1

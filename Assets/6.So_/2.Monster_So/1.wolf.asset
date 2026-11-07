@@ -24,6 +24,16 @@ MonoBehaviour:
     phases:
     - mode: 2
       actions:
+      - actionName: "\uC704\uC555"
+        intentDescription: "\uD50C\uB808\uC774\uC5B4 \uAE30\uC138 1\uAC10\uC18C"
+        effects:
+        - effectType: 5
+          damageMultiplier: 1
+          hitCount: 1
+          amount: 0
+          statusTarget: 1
+          statusData: {fileID: 11400000, guid: 9631feff2ecce4545957102fb88b061a, type: 2}
+          statusAmount: 1
       - actionName: "\uBB3C\uC5B4\uB72F\uAE30 "
         intentDescription: "\uACF5\uACA9\uB825\uC758 100%\uB85C \uACF5\uACA9"
         effects:
@@ -31,6 +41,9 @@ MonoBehaviour:
           damageMultiplier: 1
           hitCount: 1
           amount: 0
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
       - actionName: "\uD3EC\uD6A8"
         intentDescription: "\uC790\uC2E0\uC758 \uACF5\uACA9\uB825 25%\uC99D\uAC00"
         effects:
@@ -38,6 +51,16 @@ MonoBehaviour:
           damageMultiplier: 1
           hitCount: 1
           amount: 2
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
+        - effectType: 5
+          damageMultiplier: 1
+          hitCount: 1
+          amount: 0
+          statusTarget: 0
+          statusData: {fileID: 11400000, guid: 9631feff2ecce4545957102fb88b061a, type: 2}
+          statusAmount: 2
       - actionName: "\uD560\uD034\uAE30 "
         intentDescription: "\uACF5\uACA9\uB825\uC758 75%\uB85C 2\uD68C \uACF5\uACA9"
         effects:
@@ -45,6 +68,9 @@ MonoBehaviour:
           damageMultiplier: 0.75
           hitCount: 2
           amount: 0
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
       transitionAfterActions: 0
       nextPhaseIndex: -1
   negoProbability: 0

@@ -736,6 +736,48 @@ public class BattleManager : MonoBehaviour
         return Mathf.Max(1, Mathf.RoundToInt(finalDamage));
     }
 
+
+    /// <summary>
+    /// 현재 플레이어와 적의 상태를 기준으로 1타 피해를 계산한다.
+    /// 계산만 수행하며, 활력 발동 여부나 체력은 변경하지 않는다.
+    /// 실제 공격과 설명창이 같은 계산을 사용하기 위한 함수.
+    /// </summary>
+    public int CalculatePlayerAttackDamage(
+        float damageMultiplier,
+        bool includeVigor)
+    {
+        if (currentPlayerInfo == null ||
+            currentMonsterInfo == null)
+        {
+            return 0;
+        }
+
+        float attack =
+            (currentPlayerInfo.addmg + currentPlayerInfo.buffad) *
+            currentPlayerInfo.multad;
+
+        float defense =
+            (currentMonsterInfo.def + currentMonsterInfo.buffdef) *
+            currentMonsterInfo.multdef;
+
+        int damage =
+            CalculateDamage(attack, defense, damageMultiplier);
+
+        // 기세는 모든 직접 타격에 적용한다.
+        damage +=
+            GetPlayerStatusAmount(BattleStatusType.Momentum);
+
+        // 실제 첫 타격 또는 첫 타격의 미리보기일 때만 활력을 포함한다.
+        if (includeVigor)
+        {
+            damage +=
+                GetPlayerStatusAmount(BattleStatusType.Vigor);
+        }
+
+        // 음수 상태로 피해가 0 아래로 내려가도 회복으로 처리하지 않는다.
+        return Mathf.Max(0, damage);
+    }
+
     /// <summary>
     /// 적의 피해를 플레이어에게 적용한다.
     /// 현재 방어도가 체력보다 먼저 피해를 받는다.
@@ -820,29 +862,14 @@ public class BattleManager : MonoBehaviour
 
         for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
         {
-            float attack = (currentPlayerInfo.addmg + currentPlayerInfo.buffad) * currentPlayerInfo.multad;
-            float defense = (currentMonsterInfo.def + currentMonsterInfo.buffdef) * currentMonsterInfo.multdef;
-            int damage = CalculateDamage(attack, defense, damageMultiplier);
+            int damage =
+                 CalculatePlayerAttackDamage(
+                     damageMultiplier,
+                     !currentPlayerInfo.hasAttackedThisTurn);
 
-            //기세 계산
-            int momentum =
-                GetPlayerStatusAmount(
-                    BattleStatusType.Momentum);
-
-            damage += momentum;
-            //활력 계산
-            if (!currentPlayerInfo.hasAttackedThisTurn)
-            {
-                int vigor =
-                    GetPlayerStatusAmount(
-                        BattleStatusType.Vigor);
-
-                damage += vigor;
-
-                currentPlayerInfo.hasAttackedThisTurn = true;
-            }
-            //딜이 0미만으로 되진않음
-            damage = Mathf.Max(0, damage);
+            // 실제 타격이 발생했을 때만 이번 차례의 첫 타격 기회를 사용한다.
+            // 설명창에서 계산하는 것만으로는 이 값이 바뀌지 않는다.
+            currentPlayerInfo.hasAttackedThisTurn = true;
 
             currentMonsterInfo.currentHp = Mathf.Max(0, currentMonsterInfo.currentHp - damage);
             buiManager.AddLog($"<color=red>{currentMonsterInfo.name}</color>에게 <color=red>{damage}</color>의 피해를 입혔다!");
@@ -963,7 +990,28 @@ public class BattleManager : MonoBehaviour
 
         return amount;
     }
+    /// <summary>
+    /// 현재 플레이어의 방어력을 기준으로
+    /// 획득할 방어도를 계산한다.
+    /// 실제 상태는 변경하지 않는다.
+    /// </summary>
+    public int CalculatePlayerGuard(float defensePercent)
+    {
+        if (currentPlayerInfo == null)
+        {
+            return 0;
+        }
 
+        float effectiveDefense =
+            (currentPlayerInfo.defense + currentPlayerInfo.buffdef) *
+            currentPlayerInfo.multdef;
+
+        return Mathf.Max(
+            0,
+            Mathf.RoundToInt(
+                effectiveDefense *
+                defensePercent / 100f));
+    }
 
     public void BattleStart(Monster_So monster_data)
     {

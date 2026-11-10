@@ -9,9 +9,6 @@ using UnityEngine;
 [Serializable]
 public sealed class GainGuardEffect : SkillEffectBase
 {
-    [LabelText("기본 방어도")]
-    [MinValue(0)]
-    public int baseGuard;
 
     [LabelText("방어력 계수 (%)")]
     [MinValue(0f)]
@@ -29,17 +26,9 @@ public sealed class GainGuardEffect : SkillEffectBase
         }
 
         // 전투 중 방어력 보정까지 포함한 현재 유효 방어력
-        float effectiveDefense =
-            (player.defense + player.buffdef) *
-            player.multdef;
-
         int guardAmount =
-            Mathf.Max(
-                0,
-                Mathf.RoundToInt(
-                    baseGuard +
-                    effectiveDefense *
-                    defensePercent / 100f));
+           context.Battle.CalculatePlayerGuard(
+               defensePercent);
 
         int appliedGuard =
             context.Battle.GainPlayerGuard(

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "\uC704\uC555"
   m_EditorClassIdentifier: Assembly-CSharp::SkillData
   skillName: "\uC704\uC555"
-  skillDescription: "\uC801\uC5D0\uAC8C \uAE30\uC138 -1 \uBD80\uC5EC"
+  skillDescription: "\uC568\uB7A0\uB7A0\uB798"
   icon: {fileID: 5040250782774221517, guid: e35855184b9ebfe4880332287b6c059f, type: 3}
   skillType: 0
   rarity: 0

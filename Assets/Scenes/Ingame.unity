@@ -5081,8 +5081,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89d014c5b1e22494c93e72ee4aa9052f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillRewardManager
-  commonRewardPool: {fileID: 0}
-  rewardUI: {fileID: 0}
+  commonRewardPool: {fileID: 11400000, guid: ab14ec125ba492942853d2c5fa68e3a0, type: 2}
+  rewardUI: {fileID: 390973445}
 --- !u!4 &390254699
 Transform:
   m_ObjectHideFlags: 0
@@ -5091,8 +5091,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 390254697}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 192.96042, y: 417.50656, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 192.96039, y: 417.50656, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10689,6 +10689,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7a86e42fd423b314db118151bf0c6622, type: 2}
   - {fileID: 11400000, guid: d75530083d7b3d045ad145f333478758, type: 2}
   - {fileID: 11400000, guid: 9b8ed22614dbc694595b63efb23d5612, type: 2}
+  testCharacter: {fileID: 11400000, guid: 7b2cd8fb8c7f4aa47ba434faf97ad5b1, type: 2}
   initialMaxHp: 100
   initialMaxMp: 100
   initialAdAttack: 15
@@ -26802,8 +26803,8 @@ SceneRoots:
   - {fileID: 684634084}
   - {fileID: 1296947719}
   - {fileID: 1369084008}
-  - {fileID: 51852429}
   - {fileID: 390254699}
+  - {fileID: 51852429}
   - {fileID: 245547494}
   - {fileID: 2021842436}
   - {fileID: 148776840}

@@ -12,14 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ceb4b3d8e0fee2d4f8eafeb5723a5978, type: 3}
   m_Name: "0.\uACF5\uD1B5"
   m_EditorClassIdentifier: Assembly-CSharp::SkillRewardPoolData
-  skills:
-  - {fileID: 11400000, guid: 110c7e0c4a662434aaff8936dd8998ce, type: 2}
-  - {fileID: 11400000, guid: 8516c78dfb025ed47bb24a5a68c6500d, type: 2}
-  - {fileID: 11400000, guid: 5ba5fe791cea3564795fca0664046e07, type: 2}
-  - {fileID: 11400000, guid: fd124963c3109544895ae48a5c4926c0, type: 2}
-  - {fileID: 11400000, guid: 8f792ef0664483f418bfa5875f0700fe, type: 2}
-  - {fileID: 11400000, guid: dfab15dc18ab60044998abffa07b3ad5, type: 2}
-  - {fileID: 11400000, guid: 17bfb8b06511efa458555a8f5427ae08, type: 2}
-  - {fileID: 11400000, guid: 75cbe922ddb6115468fb3dbcb55fcc48, type: 2}
-  - {fileID: 11400000, guid: a89ebe42f432a8e4aae8f26e96a303d9, type: 2}
-  - {fileID: 11400000, guid: c63d8ac19ae31914ea68974ca6ba5a63, type: 2}
+  skills: []

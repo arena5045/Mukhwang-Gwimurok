@@ -23,6 +23,10 @@ public class GameManager : MonoBehaviour
 
     [Header("스킬 테스트")]
     [SerializeField] private List<SkillData> testStartSkills = new();
+    [Header("인게임 직접 실행 테스트")]
+    [SerializeField]
+    private CharacterData testCharacter;
+
 
     [Header("새 런 기본 능력치")]
     [SerializeField] private int initialMaxHp = 100;
@@ -127,7 +131,11 @@ public class GameManager : MonoBehaviour
 
         // Main 씬의 선택값을 한 번만 소비한다. Ingame 씬을 직접 실행한 경우에는
         // 캐릭터 기본값과 Inspector의 testDungeon을 사용한다.
-        CharacterData requestedCharacter = pendingCharacter;
+        CharacterData requestedCharacter =
+            pendingCharacter != null
+            ? pendingCharacter
+            : testCharacter;
+
         DungeonData requestedDungeon = pendingDungeon != null ? pendingDungeon : testDungeon;
         pendingCharacter = null;
         pendingDungeon = null;

@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d59b6c767153144ab5e5652e3d14d2, type: 3}
+  m_Name: "\uC9C4\uD604_020_\uBC94\uC6A9_R2_\uBCBD\uB825\uCC38"
+  m_EditorClassIdentifier: Assembly-CSharp::SkillData
+  skillName: "\uBCBD\uB825\uCC38"
+  skillDescription: "\uBCBC\uB77D\uCC98\uB7FC \uBB34\uAC70\uC6B4 \uC77C\uACA9\uC744
+    \uB0B4\uB9AC\uCCD0 \uD070 \uD53C\uD574\uB97C \uC785\uD78C\uB2E4."
+  icon: {fileID: 5040250782774221517, guid: e35855184b9ebfe4880332287b6c059f, type: 3}
+  skillType: 0
+  rarity: 1
+  isBasicSkill: 0
+  tags: 17
+  trigger: 0
+  levels:
+  - mpCost: 0
+    maxActivationsPerAction: 1
+    actionPointCost: 3
+    cooldownTurns: 1
+    initialCooldownTurns: 0
+    conditions: []
+    effects:
+    - rid: 2610652111531671695
+  - mpCost: 0
+    maxActivationsPerAction: 1
+    actionPointCost: 3
+    cooldownTurns: 1
+    initialCooldownTurns: 0
+    conditions: []
+    effects:
+    - rid: 2610652111531671696
+  - mpCost: 0
+    maxActivationsPerAction: 1
+    actionPointCost: 3
+    cooldownTurns: 1
+    initialCooldownTurns: 0
+    conditions: []
+    effects:
+    - rid: 2610652111531671697
+  references:
+    version: 2
+    RefIds:
+    - rid: 2610652111531671695
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 1.75
+        hitCount: 1
+    - rid: 2610652111531671696
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 2.05
+        hitCount: 1
+    - rid: 2610652111531671697
+      type: {class: AttackEffect, ns: , asm: Assembly-CSharp}
+      data:
+        damageMultiplier: 2.4
+        hitCount: 1

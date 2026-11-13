@@ -95,6 +95,11 @@ public class BattleSkillDetailUI : MonoBehaviour
     /// 현재 스킬의 효과를 읽어 전투 상황이 반영된 설명을 만든다.
     /// 아직 자동 설명을 지원하지 않는 스킬은 기존 설명을 유지한다.
     /// </summary>
+    /// <summary>
+    /// 현재 스킬의 효과를 순서대로 읽어 설명을 만든다.
+    /// 아직 자동 설명을 지원하지 않는 효과가 포함되어 있으면
+    /// 기존 스킬 설명을 사용한다.
+    /// </summary>
     private string BuildDescription(
         SkillData skill,
         SkillLevelData levelData)
@@ -102,7 +107,6 @@ public class BattleSkillDetailUI : MonoBehaviour
         BattleManager battle =
             BattleManager.instance;
 
-        // 자동 설명을 만들 수 없는 상태라면 기존 설명 사용
         if (battle == null ||
             battle.currentPlayerInfo == null ||
             battle.currentMonsterInfo == null ||
@@ -119,175 +123,190 @@ public class BattleSkillDetailUI : MonoBehaviour
             return skill.skillDescription;
         }
 
-
-        // ─────────────────────
-        // 방어도 획득
-        // ─────────────────────
-        if (levelData.effects.Count == 1 &&
-            levelData.effects[0] is GainGuardEffect guard)
-        {
-            int guardAmount =
-                battle.CalculatePlayerGuard(
-                    guard.defensePercent);
-
-            return
-                $"{ColorValue(guardAmount, DefenseValueColor)} " +
-                $"(<sprite=\"DefenseICON\" index=0> {guard.defensePercent:0.##}%)의 " +
-                $"방어도를 얻는다.";
-        }
-
-
-        // ─────────────────────
-        // 전투 상태 획득 / 감소
-        // ─────────────────────
-        if (levelData.effects.Count == 1 &&
-            levelData.effects[0] is GainBattleStatusEffect statusEffect &&
-            statusEffect.statusData != null)
-        {
-            string statusName =
-                statusEffect.statusData.statusName;
-
-            int amount =
-                statusEffect.amount;
-
-            string targetText =
-                statusEffect.target == BattleStatusTarget.Enemy
-                ? "적이 "
-                : "";
-
-            string particle =
-                GetObjectParticle(statusName);
-
-            string changeText =
-                amount >= 0
-                ? "얻는다."
-                : "잃는다.";
-
-            return
-                $"{targetText}" +
-                $"{statusName}{particle} " +
-                $"{ColorValue(Mathf.Abs(amount), SpecialValueColor)} " +
-                $"{changeText}";
-        }
-
-
-        // ─────────────────────
-        // 공격
-        // ─────────────────────
-
-        // 현재는 모든 효과가 AttackEffect인 스킬만
-        // 공격 자동 설명을 지원한다.
-        foreach (SkillEffectBase effect in levelData.effects)
-        {
-            if (!(effect is AttackEffect attack) ||
-                attack.hitCount <= 0)
-            {
-                return skill.skillDescription;
-            }
-        }
-
         StringBuilder description =
             new StringBuilder();
 
-        // 활력을 제외한 일반 타격 피해 총합
         int normalTotal = 0;
-
-        // 활력처럼 일부 타격에만 추가되는 피해
         int additionalTotal = 0;
 
-        // 이번 차례 첫 타격에 활력이 적용 가능한지
+        bool hasAttack = false;
+
+        // 활력은 이번 차례의 첫 공격 타격에만 적용된다.
         bool canApplyVigor =
             !battle.currentPlayerInfo.hasAttackedThisTurn;
 
 
         foreach (SkillEffectBase effect in levelData.effects)
         {
-            AttackEffect attack =
-                (AttackEffect)effect;
-
-            // 공격력 보정 + 기세까지 반영한 일반 1타 피해
-            int hitDamage =
-                battle.CalculatePlayerAttackDamage(
-                    attack.damageMultiplier,
-                    false);
-
-            normalTotal +=
-                hitDamage * attack.hitCount;
-
-
-            // 활력은 첫 타격에만 적용
-            if (canApplyVigor)
+            if (effect == null)
             {
-                int firstHitDamage =
+                continue;
+            }
+
+
+            // ─────────────────────
+            // 공격
+            // ─────────────────────
+            if (effect is AttackEffect attack)
+            {
+                if (attack.hitCount <= 0)
+                {
+                    return skill.skillDescription;
+                }
+
+                int hitDamage =
                     battle.CalculatePlayerAttackDamage(
                         attack.damageMultiplier,
-                        true);
+                        false);
 
-                additionalTotal +=
-                    firstHitDamage - hitDamage;
+                normalTotal +=
+                    hitDamage * attack.hitCount;
 
-                canApplyVigor = false;
-            }
+                if (canApplyVigor)
+                {
+                    int firstHitDamage =
+                        battle.CalculatePlayerAttackDamage(
+                            attack.damageMultiplier,
+                            true);
 
+                    additionalTotal +=
+                        firstHitDamage - hitDamage;
 
-            // 공격 효과가 여러 개라면 줄바꿈
-            if (description.Length > 0)
-            {
-                description.AppendLine();
-            }
+                    canApplyVigor = false;
+                }
 
+                if (description.Length > 0)
+                {
+                    description.AppendLine();
+                }
 
-            float coefficient =
-                attack.damageMultiplier * 100f;
+                float coefficient =
+                    attack.damageMultiplier * 100f;
 
-            description.Append(
-                $"{ColorValue(hitDamage, AttackValueColor)} " +
-                $"(<sprite=0> {coefficient:0.##}%)의 피해");
-
-
-            if (attack.hitCount == 1)
-            {
                 description.Append(
-                    "를 입힌다.");
+                    $"{ColorValue(hitDamage, AttackValueColor)} " +
+                    $"(<sprite=0> {coefficient:0.##}%)의 피해");
+
+                if (attack.hitCount == 1)
+                {
+                    description.Append(
+                        "를 입힌다.");
+                }
+                else
+                {
+                    description.Append(
+                        $"로 <b>{attack.hitCount}</b>회 공격한다.");
+                }
+
+                hasAttack = true;
+                continue;
             }
-            else
+
+
+            // ─────────────────────
+            // 방어도 획득
+            // ─────────────────────
+            if (effect is GainGuardEffect guard)
             {
+                int guardAmount =
+                    battle.CalculatePlayerGuard(
+                        guard.defensePercent);
+
+                if (description.Length > 0)
+                {
+                    description.AppendLine();
+                }
+
                 description.Append(
-                    $"로 <b>{attack.hitCount}</b>회 공격한다.");
+                    $"{ColorValue(guardAmount, DefenseValueColor)} " +
+                    $"(<sprite=\"DefenseICON\" index=0> {guard.defensePercent:0.##}%)의 " +
+                    $"방어도를 얻는다.");
+
+                continue;
             }
+
+
+            // ─────────────────────
+            // 전투 상태 획득 / 감소
+            // ─────────────────────
+            if (effect is GainBattleStatusEffect statusEffect)
+            {
+                if (statusEffect.statusData == null)
+                {
+                    return skill.skillDescription;
+                }
+
+                string statusName =
+                    statusEffect.statusData.statusName;
+
+                string targetText =
+                    statusEffect.target == BattleStatusTarget.Enemy
+                    ? "적이 "
+                    : "";
+
+                string particle =
+                    GetObjectParticle(statusName);
+
+                string changeText =
+                    statusEffect.amount >= 0
+                    ? "얻는다."
+                    : "잃는다.";
+
+                if (description.Length > 0)
+                {
+                    description.AppendLine();
+                }
+
+                description.Append(
+                    $"{targetText}" +
+                    $"{statusName}{particle} " +
+                    $"{ColorValue(Mathf.Abs(statusEffect.amount), SpecialValueColor)} " +
+                    $"{changeText}");
+
+                continue;
+            }
+
+
+            // 아직 자동 설명을 지원하지 않는 효과가 하나라도 있으면
+            // 일부 효과만 표시하지 않고 기존 설명을 사용한다.
+            return skill.skillDescription;
+        }
+
+
+        if (description.Length == 0)
+        {
+            return skill.skillDescription;
         }
 
 
         // ─────────────────────
         // 예상 총 피해
         // ─────────────────────
-
-        int totalDamage =
-            normalTotal + additionalTotal;
-
-        description.Append(
-            $"\n\n예상 총 피해: " +
-            $"{ColorValue(totalDamage, AttackValueColor)}");
-
-
-        // 활력 등 별도 추가 피해가 있을 때만 계산식 표시
-        if (additionalTotal > 0)
+        if (hasAttack)
         {
-            description.Append(
-                $" ({ColorValue(normalTotal, AttackValueColor)} + " +
-                $"{ColorValue(additionalTotal, SpecialValueColor)})");
-        }
-        else if (additionalTotal < 0)
-        {
-            description.Append(
-                $" ({ColorValue(normalTotal, AttackValueColor)} - " +
-                $"{ColorValue(Mathf.Abs(additionalTotal), SpecialValueColor)})");
-        }
+            int totalDamage =
+                normalTotal + additionalTotal;
 
+            description.Append(
+                $"\n\n예상 총 피해: " +
+                $"{ColorValue(totalDamage, AttackValueColor)}");
+
+            if (additionalTotal > 0)
+            {
+                description.Append(
+                    $" ({ColorValue(normalTotal, AttackValueColor)} + " +
+                    $"{ColorValue(additionalTotal, SpecialValueColor)})");
+            }
+            else if (additionalTotal < 0)
+            {
+                description.Append(
+                    $" ({ColorValue(normalTotal, AttackValueColor)} - " +
+                    $"{ColorValue(Mathf.Abs(additionalTotal), SpecialValueColor)})");
+            }
+        }
 
         return description.ToString();
     }
-
     private static string GetObjectParticle(string word)
     {
         if (string.IsNullOrEmpty(word))

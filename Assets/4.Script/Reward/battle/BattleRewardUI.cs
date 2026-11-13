@@ -1,161 +1,69 @@
-using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 전투 보상 무공들을 화면에 표시하고,
+/// 선택된 무공을 보상 관리자에게 전달한다.
+/// 보상풀과 추첨 규칙은 소유하지 않는다.
+/// </summary>
 public class BattleRewardUI : MonoBehaviour
 {
     [SerializeField]
-    private List<SkillData> rewardPool = new();
-
-    [SerializeField]
     private BattleRewardOptionUI[] options;
 
-    // 스킬 보상 선택이 끝난 뒤 실행할 다음 작업
-    private Action onRewardSelected;
-
-
-    public void Open(Action onComplete = null)
+    /// <summary>
+    /// 전달받은 무공 목록을 보상 선택지에 표시한다.
+    /// 정상적으로 열었으면 true를 반환한다.
+    /// </summary>
+    public bool Open(
+        IReadOnlyList<SkillData> rewards,
+        Action<SkillData> onSelected)
     {
-        List<SkillData> rewards = RollRewards();
-
-        if (rewards == null)
+        if (rewards == null ||
+            onSelected == null)
         {
-            // 받을 스킬이 부족하면 이번 스킬 보상은 건너뛰고 다음 흐름으로 진행한다.
-            onComplete?.Invoke();
-            return;
+            Debug.LogError(
+                "전투 보상 UI에 필요한 데이터가 없습니다.");
+
+            return false;
         }
-        // 이번 스킬 보상 선택이 끝난 뒤 실행할 작업을 기억해둔다.
-        onRewardSelected = onComplete;
 
-
-        for (int i = 0; i < 3; i++)
+        if (options == null ||
+            options.Length != rewards.Count)
         {
-            // 카드가 선택되면 SelectReward가 호출되도록 같이 전달
+            Debug.LogError(
+                $"전투 보상 선택지 개수와 후보 개수가 다릅니다. " +
+                $"UI: {options?.Length ?? 0}, " +
+                $"후보: {rewards.Count}");
+
+            return false;
+        }
+
+        for (int i = 0; i < options.Length; i++)
+        {
+            if (options[i] == null)
+            {
+                Debug.LogError(
+                    $"전투 보상 선택지 {i}번이 연결되지 않았습니다.");
+
+                return false;
+            }
+
             options[i].Setup(
                 rewards[i],
-                SelectReward);
+                onSelected);
         }
 
         gameObject.SetActive(true);
+        return true;
     }
 
-    // 현재 플레이어가 실제로 받을 수 있는 스킬만 모은다.
-    private List<SkillData> GetAvailableSkills()
+    /// <summary>
+    /// 전투 보상 선택창을 닫는다.
+    /// </summary>
+    public void Close()
     {
-        PlayerData player =
-            GameManager.Instance.Context.player;
-
-        List<SkillData> candidates = new();
-
-        foreach (SkillData skill in rewardPool)
-        {
-            if (player.CanReceiveSkill(skill))
-            {
-                candidates.Add(skill);
-            }
-        }
-
-        return candidates;
-    }
-
-    // 받을 수 있는 후보 중 서로 다른 스킬 3개를 랜덤으로 뽑는다.
-    private List<SkillData> RollRewards()
-    {
-        List<SkillData> candidates =
-            GetAvailableSkills();
-
-        if (candidates.Count < 3)
-        {
-            Debug.LogError(
-                "전투 보상으로 제시할 수 있는 스킬이 3개 미만입니다.");
-
-            return null;
-        }
-
-        // 후보 목록을 섞는다.
-        for (int i = 0; i < candidates.Count; i++)
-        {
-            int randomIndex =
-                UnityEngine.Random.Range(
-                    i,
-                    candidates.Count);
-
-            SkillData temp = candidates[i];
-            candidates[i] = candidates[randomIndex];
-            candidates[randomIndex] = temp;
-        }
-
-        // 섞인 목록의 앞 3개만 보상 후보로 사용한다.
-        return new List<SkillData>
-        {
-            candidates[0],
-            candidates[1],
-            candidates[2]
-        };
-    }
-    private void SelectReward(SkillData skill)
-    {
-        PlayerData player =
-            GameManager.Instance.Context.player;
-
-        // 신규 스킬이면 Lv1 획득,
-        // 이미 보유 중이면 한 레벨 강화한다.
-        bool success =
-            player.AcquireOrLevelUpSkill(skill);
-
-        if (!success)
-        {
-            Debug.LogWarning(
-                $"스킬 보상 적용 실패 : {skill.skillName}");
-
-            return;
-        }
-
-        OwnedSkill ownedSkill =
-            player.GetOwnedSkill(skill);
-
-        Debug.Log(
-            $"전투 보상 선택 : {skill.skillName} Lv.{ownedSkill.level}");
-
         gameObject.SetActive(false);
-
-        // 현재 완료 작업을 먼저 꺼내고 비운 뒤 한 번만 실행한다.
-        Action completeAction = onRewardSelected;
-        onRewardSelected = null;
-
-        completeAction?.Invoke();
     }
-
-    [Button("전투 스킬 후보 테스트")]
-    private void TestRollRewards()
-    {
-        List<SkillData> rewards =
-            RollRewards();
-
-        if (rewards == null)
-        {
-            return;
-        }
-
-        Debug.Log(
-            $"전투 스킬 후보\n" +
-            $"1. {rewards[0].skillName}\n" +
-            $"2. {rewards[1].skillName}\n" +
-            $"3. {rewards[2].skillName}");
-    }
-
-
-    [Button("전투 스킬 보상 완료 콜백 테스트")]
-    private void TestOpen()
-    {
-        Open(TestComplete);
-    }
-
-    private void TestComplete()
-    {
-        Debug.Log("전투 스킬 보상 처리 완료!");
-    }
-
-
 }

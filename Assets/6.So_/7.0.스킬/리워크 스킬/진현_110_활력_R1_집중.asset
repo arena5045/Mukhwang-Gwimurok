@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25d59b6c767153144ab5e5652e3d14d2, type: 3}
+  m_Name: "\uC9C4\uD604_110_\uD65C\uB825_R1_\uC9D1\uC911"
+  m_EditorClassIdentifier: Assembly-CSharp::SkillData
+  skillName: "\uC9D1\uC911"
+  skillDescription: "\uD638\uD761\uC744 \uAC00\uB2E4\uB4EC\uC5B4 \uD65C\uB825\uC744
+    \uBAA8\uC740\uB2E4."
+  icon: {fileID: 5040250782774221517, guid: e35855184b9ebfe4880332287b6c059f, type: 3}
+  skillType: 0
+  rarity: 0
+  isBasicSkill: 0
+  tags: 524296
+  trigger: 0
+  levels:
+  - mpCost: 0
+    maxActivationsPerAction: 1
+    actionPointCost: 1
+    cooldownTurns: 3
+    initialCooldownTurns: 0
+    conditions: []
+    effects:
+    - rid: 2610652111531671701
+  - mpCost: 0
+    maxActivationsPerAction: 1
+    actionPointCost: 1
+    cooldownTurns: 3
+    initialCooldownTurns: 0
+    conditions: []
+    effects:
+    - rid: 2610652111531671702
+  - mpCost: 0
+    maxActivationsPerAction: 1
+    actionPointCost: 1
+    cooldownTurns: 3
+    initialCooldownTurns: 0
+    conditions: []
+    effects:
+    - rid: 2610652111531671703
+  references:
+    version: 2
+    RefIds:
+    - rid: 2610652111531671701
+      type: {class: GainBattleStatusEffect, ns: , asm: Assembly-CSharp}
+      data:
+        target: 0
+        statusData: {fileID: 11400000, guid: e3403864bbc4e524ab0fa53c5d58855d, type: 2}
+        amount: 2
+    - rid: 2610652111531671702
+      type: {class: GainBattleStatusEffect, ns: , asm: Assembly-CSharp}
+      data:
+        target: 0
+        statusData: {fileID: 11400000, guid: e3403864bbc4e524ab0fa53c5d58855d, type: 2}
+        amount: 3
+    - rid: 2610652111531671703
+      type: {class: GainBattleStatusEffect, ns: , asm: Assembly-CSharp}
+      data:
+        target: 0
+        statusData: {fileID: 11400000, guid: e3403864bbc4e524ab0fa53c5d58855d, type: 2}
+        amount: 4

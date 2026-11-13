@@ -5,15 +5,16 @@ using UnityEngine.UI;
 
 public class BattleSkillSlotUI : MonoBehaviour
 {
-    [Header("스킬 슬롯 UI")]
-    [SerializeField] private Image iconImage;
-    [SerializeField] private TMP_Text nameText;
-    [SerializeField] private TMP_Text actionPointText;
-    [SerializeField] private Button selectButton;
+    [Header("공용 무공 아이콘")]
+    [SerializeField]
+    private SkillIconUI skillIconUI;
 
-    [Header("스킬 상태 UI")]
-    [SerializeField] private GameObject disabledOverlay;
-    [SerializeField] private TMP_Text cooldownText;
+    [Header("스킬 슬롯 UI")]
+    [SerializeField]
+    private TMP_Text nameText;
+
+    [SerializeField]
+    private Button selectButton;
 
 
     // 현재 이 슬롯이 표시하고 있는 전투용 스킬 상태
@@ -28,25 +29,23 @@ public class BattleSkillSlotUI : MonoBehaviour
         BattleSkillState state,
         Action<BattleSkillState> selectAction)
     {
+        if (state == null ||
+            state.Data == null)
+        {
+            return;
+        }
+
         currentState = state;
         onSelected = selectAction;
 
-        SkillData skill = state.Data;
-
-        // 현재 스킬 레벨에 맞는 행동력 비용 등의 데이터를 가져옴
-        SkillLevelData levelData =
-            skill.GetLevelData(state.Level);
-
         // 스킬 이름 표시
-        nameText.text = skill.skillName;
+        nameText.text = state.Data.skillName;
 
-        // 스킬 아이콘 표시
-        iconImage.sprite = skill.icon;
-        iconImage.enabled = skill.icon != null;
-
-        // 스킬 사용에 필요한 행동력 표시
-        actionPointText.text =
-            levelData.actionPointCost.ToString();
+        // 아이콘, 비용, 희귀도, 수련도는
+        // 공용 무공 아이콘 UI가 표시한다.
+        skillIconUI.SetSkill(
+            state.Data,
+            state.Level);
 
         // 프리팹을 재사용하더라도 클릭 이벤트가 중복 등록되지 않게 초기화
         selectButton.onClick.RemoveAllListeners();
@@ -62,7 +61,8 @@ public class BattleSkillSlotUI : MonoBehaviour
     /// </summary>
     public void RefreshState()
     {
-        if (currentState == null)
+        if (currentState == null ||
+            BattleManager.instance == null)
         {
             return;
         }
@@ -75,26 +75,14 @@ public class BattleSkillSlotUI : MonoBehaviour
             return;
         }
 
-        // 현재 이 스킬을 실제로 사용할 수 있는지 확인
-        bool canUse =
-            currentState.CanUseActive() &&
-            BattleManager.instance.CurrentActionPoints >=
-            levelData.actionPointCost;
+        // 실제 무공 실행 때 사용하는 것과
+        // 동일한 판정 함수를 사용한다.
+        bool canUse = BattleManager.instance.CanUseManualSkill(currentState);
 
-        // 사용할 수 없는 스킬은 어둡게 표시
-        disabledOverlay.SetActive(!canUse);
 
-        // 재사용 대기시간 표시
-        if (currentState.CooldownRemaining > 0)
-        {
-            cooldownText.gameObject.SetActive(true);
-            cooldownText.text =
-                currentState.CooldownRemaining.ToString();
-        }
-        else
-        {
-            cooldownText.gameObject.SetActive(false);
-        }
+        skillIconUI.SetBattleState(
+            canUse,
+            currentState.CooldownRemaining);
     }
 
 

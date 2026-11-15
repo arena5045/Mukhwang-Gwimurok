@@ -42,6 +42,16 @@ public class BattleSkillSelectUI : MonoBehaviour
         skillDetailUI.Clear();
     }
 
+    /// <summary>
+    /// 현재 선택 상태와 상세정보를 초기화한 뒤
+    /// 무공 선택창을 닫는다.
+    /// </summary>
+    public void Close()
+    {
+        ClearSelection();
+        gameObject.SetActive(false);
+    }
+
 
     /// <summary>
     /// 현재 플레이어가 보유한 Manual 액티브 스킬을

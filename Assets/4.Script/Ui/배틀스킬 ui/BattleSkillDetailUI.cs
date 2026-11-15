@@ -1,7 +1,6 @@
-using System.Text;
+
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class BattleSkillDetailUI : MonoBehaviour
 {
@@ -61,10 +60,6 @@ public class BattleSkillDetailUI : MonoBehaviour
             skill,
             state.Level);
 
-        // 남은 재사용 대기시간
-        skillIconUI.SetCooldown(
-            state.CooldownRemaining);
-
         nameText.text =
           skill.skillName;
 
@@ -91,6 +86,7 @@ public class BattleSkillDetailUI : MonoBehaviour
         tagText.text =
             skill.tags.ToString();
 
+        //쿨타임
         bool canUse =BattleManager.instance.CanUseManualSkill(state);
 
         skillIconUI.SetBattleState(canUse,state.CooldownRemaining);

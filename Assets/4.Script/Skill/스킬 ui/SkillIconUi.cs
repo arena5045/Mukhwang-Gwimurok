@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,8 +19,6 @@ public class SkillIconUI : MonoBehaviour
     /// 호출한 UI가 필요한 값만 전달한다.
     /// 
     /// </summary>
-    private SkillData skill;
-    private int skillLevel;
 
     [Header("무공 아이콘")]
     [SerializeField]
@@ -125,36 +122,7 @@ public class SkillIconUI : MonoBehaviour
         SetBattleState(true,0);
     }
 
-    /// <summary>
-    /// 남은 재사용 대기시간을 표시한다.
-    /// 0 이하라면 재사용 대기시간 UI를 숨긴다.
-    /// </summary>
-    public void SetCooldown(
-        int cooldownRemaining)
-    {
-        int remaining =
-            Mathf.Max(
-                0,
-                cooldownRemaining);
-
-        bool hasCooldown =
-            remaining > 0;
-
-        unavailableOverlay.gameObject.SetActive(
-            hasCooldown);
-
-        if (hasCooldown)
-        {
-            cooldownText.text =
-                remaining.ToString();
-        }
-        else
-        {
-            cooldownText.text =
-                string.Empty;
-        }
-    }
-
+   
     /// <summary>
     /// 전투 중 무공의 사용 가능 상태를 표시한다.
     ///
@@ -257,7 +225,7 @@ public class SkillIconUI : MonoBehaviour
         costText.text =
             string.Empty;
 
-        SetCooldown(0);
+        SetBattleState(true, 0);
 
         foreach (SkillLevelPipUI pip in levelPips)
         {

@@ -67,14 +67,6 @@ public class BattleSkillSlotUI : MonoBehaviour
             return;
         }
 
-        SkillLevelData levelData =
-            currentState.Data.GetLevelData(currentState.Level);
-
-        if (levelData == null)
-        {
-            return;
-        }
-
         // 실제 무공 실행 때 사용하는 것과
         // 동일한 판정 함수를 사용한다.
         bool canUse = BattleManager.instance.CanUseManualSkill(currentState);

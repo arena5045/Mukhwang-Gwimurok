@@ -356,6 +356,157 @@ public static class SkillDescriptionBuilder
         return description.ToString();
     }
 
+
+    /// <summary>
+    /// 무공 보상 카드에 표시할 짧은 효과 요약을 만든다.
+    ///
+    /// 상세 설명과 달리 계수, 조사, 총 피해 문구를 제외하고
+    /// 후보들을 빠르게 비교하는 데 필요한 핵심 수치만 표시한다.
+    ///
+    /// 예:
+    /// 11 피해
+    /// 8 피해 × 2
+    /// 11 피해 · 활력 +1
+    /// </summary>
+    /// 
+    public static string BuildRewardSummary(
+        SkillData skill,
+        int previewLevel,
+        PlayerData player)
+    {
+        SkillLevelData levelData =
+            GetLevelData(
+                skill,
+                previewLevel);
+
+        if (!CanBuildAutomatically(levelData) ||
+            player == null ||
+            player.stats == null)
+        {
+            return GetFallbackDescription(
+                skill);
+        }
+
+        StringBuilder summary =
+            new StringBuilder();
+
+        foreach (SkillEffectBase effect in levelData.effects)
+        {
+            if (effect == null)
+            {
+                continue;
+            }
+
+            // ─────────────────────
+            // 공격
+            // ─────────────────────
+            if (effect is AttackEffect attack)
+            {
+                if (attack.hitCount <= 0)
+                {
+                    return GetFallbackDescription(
+                        skill);
+                }
+
+                int hitDamage =
+                    CalculateRewardAttackDamage(
+                        player,
+                        attack.damageMultiplier);
+
+                AppendSummarySeparator(
+                    summary);
+
+                summary.Append(
+                    $"{ColorValue(hitDamage, AttackValueColor)} 피해");
+
+                if (attack.hitCount > 1)
+                {
+                    summary.Append(
+                        $" × <b>{attack.hitCount}</b>");
+                }
+
+                continue;
+            }
+
+            // ─────────────────────
+            // 방어도 획득
+            // ─────────────────────
+            if (effect is GainGuardEffect guard)
+            {
+                int guardAmount =
+                    CalculateRewardGuard(
+                        player,
+                        guard.defensePercent);
+
+                AppendSummarySeparator(
+                    summary);
+
+                summary.Append(
+                    $"방어도 " +
+                    $"{ColorValue(guardAmount, DefenseValueColor)}");
+
+                continue;
+            }
+
+            // ─────────────────────
+            // 전투 상태 획득 / 감소
+            // ─────────────────────
+            if (effect is GainBattleStatusEffect statusEffect)
+            {
+                if (statusEffect.statusData == null)
+                {
+                    return GetFallbackDescription(
+                        skill);
+                }
+
+                string targetText =
+                    statusEffect.target ==
+                    BattleStatusTarget.Enemy
+                    ? "적 "
+                    : "";
+
+                string sign =
+                    statusEffect.amount >= 0
+                    ? "+"
+                    : "-";
+
+                AppendSummarySeparator(
+                    summary);
+
+                summary.Append(
+                    $"{targetText}" +
+                    $"{statusEffect.statusData.statusName} " +
+                    $"{sign}" +
+                    $"{ColorValue(Mathf.Abs(statusEffect.amount), SpecialValueColor)}");
+
+                continue;
+            }
+
+            // 아직 짧은 요약을 지원하지 않는 효과가 있으면
+            // 일부 정보만 보여주지 않고 기존 설명으로 돌아간다.
+            return GetFallbackDescription(
+                skill);
+        }
+
+        return summary.Length > 0
+            ? summary.ToString()
+            : GetFallbackDescription(skill);
+    }
+
+
+    /// <summary>
+    /// 보상 요약에 이미 효과가 작성되어 있다면
+    /// 다음 효과 앞에 짧은 구분점을 넣는다.
+    /// </summary>
+    private static void AppendSummarySeparator(
+        StringBuilder summary)
+    {
+        if (summary.Length > 0)
+        {
+            summary.Append('\n');
+        }
+    }
+
     /// <summary>
     /// 자동 설명을 만들 수 있는 기본 조건인지 확인한다.
     /// 조건부 무공의 조건 문장은 아직 지원하지 않는다.

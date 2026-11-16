@@ -33,9 +33,6 @@ public sealed class GainGuardEffect : SkillEffectBase
         int appliedGuard =
             context.Battle.GainPlayerGuard(
                 guardAmount);
-        // 먼저 발동 로그
-        context.Battle.buiManager.AddLog(
-            $"<color=#99FF99>{context.State.Data.skillName}</color> 발동!");
 
         // 공격의 선딜과 비슷하게 약간 기다림
         yield return new WaitForSeconds(0.5f);

@@ -29,6 +29,13 @@ public class BattleRewardOptionUI : MonoBehaviour
     [SerializeField]
     private Button selectButton;
 
+    [SerializeField]
+    private TMP_Text cooldownText;
+
+    [SerializeField]
+    private TMP_Text firstCooldownText;
+
+
     // 현재 이 카드가 보여주고 있는 스킬
     private SkillData currentSkill;
 
@@ -61,7 +68,7 @@ public class BattleRewardOptionUI : MonoBehaviour
         skillIconUI.SetSkill(skill, previewLevel);
 
         // 선택 후 수련 단계의 효과와 수치를 표시한다.
-        descriptionText.text = SkillDescriptionBuilder.BuildRewardDescription(
+        descriptionText.text = SkillDescriptionBuilder.BuildRewardSummary(
                     skill,
                     previewLevel,
                     player);

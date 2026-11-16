@@ -67,8 +67,16 @@ public sealed class ModifyMpEffect : SkillEffectBase
                 $"도력 리젠 {(regenModifierAmount > 0 ? "+" : "")}{regenModifierAmount}";
         }
 
-        context.Battle.buiManager.AddLog(
-            $"<color=#99FF99>{context.State.Data.skillName}</color> 발동! \n{effectLog}");
+        // 무공 발동 로그와 실제 효과 로그 사이의
+        // 짧은 연출 간격을 유지한다.
+        yield return new WaitForSeconds(
+            0.5f);
+
+        if (!string.IsNullOrEmpty(effectLog))
+        {
+            context.Battle.buiManager.AddLog(
+                effectLog);
+        }
 
         yield break;
     }

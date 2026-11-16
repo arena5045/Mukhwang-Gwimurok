@@ -855,10 +855,20 @@ public class BattleManager : MonoBehaviour
         float beforeHitDelay = 0.5f,
         float afterAttackDelay = 0.8f,
         BattleSkillState sourceSkill = null,
-        SkillChainContext chain = null)
+        SkillChainContext chain = null,
+        bool showActionLog = true)
     {
-        buiManager.AddLog(actionName);
-        yield return new WaitForSeconds(beforeHitDelay);
+        // 일반 공격처럼 별도의 행동 이름이 필요한 경우에만 출력한다.
+        // SkillData 기반 무공은 ExecuteSkill에서 이미 발동 로그를 출력한다.
+        if (showActionLog)
+        {
+            buiManager.AddLog(
+                actionName);
+        }
+
+        yield return new WaitForSeconds(
+            beforeHitDelay);
+
 
         for (int hitIndex = 0; hitIndex < hitCount; hitIndex++)
         {
@@ -926,7 +936,8 @@ public class BattleManager : MonoBehaviour
             beforeHitDelay,
             afterAttackDelay,
             sourceSkill,
-            chain);
+            chain,
+            showActionLog: true);
     }
 
 
@@ -1607,14 +1618,46 @@ public class BattleManager : MonoBehaviour
              chain);
 
 
-        // 현재 레벨에 등록된 효과를 순서대로 실행
+        if (levelData.effects == null ||
+               levelData.effects.Count == 0)
+        {
+            yield break;
+        }
+
+        // 실제로 실행할 효과가 하나라도 있는지 확인한다.
+        bool hasEffect = false;
+
         foreach (SkillEffectBase effect in levelData.effects)
         {
             if (effect != null)
             {
-                yield return effect.Execute(context);
+                hasEffect = true;
+                break;
             }
         }
+
+        if (!hasEffect)
+        {
+            yield break;
+        }
+
+        // 무공 이름은 Effect마다 출력하지 않고
+        // 무공 한 번의 실행마다 여기서 한 번만 출력한다.
+        buiManager.AddLog(
+            $"<color=#99FF99>{skill.skillName}</color> 발동!");
+
+        // 현재 레벨에 등록된 효과를 순서대로 실행
+        foreach (SkillEffectBase effect in levelData.effects)
+        {
+            if (effect == null)
+            {
+                continue;
+            }
+
+            yield return effect.Execute(
+                context);
+        }
+
         state.MarkActivated();
 
     }

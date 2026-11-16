@@ -29,9 +29,6 @@ public sealed class GainBattleStatusEffect
             yield break;
         }
 
-        context.Battle.buiManager.AddLog(
-            $"<color=#99FF99>{context.State.Data.skillName}</color> 발동!");
-
         yield return new WaitForSeconds(0.5f);
 
         if (target == BattleStatusTarget.Player)

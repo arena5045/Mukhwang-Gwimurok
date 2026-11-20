@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7855a067afac8514398c9145a486482d, type: 3}
+  m_Name: 003.rat
+  m_EditorClassIdentifier: 
+  monsterName: "\uADF8\uB298\uC950"
+  monsterSprite: {fileID: -6464869995595449900, guid: 721ad2a08c677b54da83489b7560b576, type: 3}
+  scaleModifier: 1.5
+  maxHp: 26
+  attackPower: 6
+  defencePower: 0
+  attackSpeed: 10
+  battlePattern:
+    startPhaseIndex: 0
+    phases:
+    - mode: 0
+      actions:
+      - actionName: "\uC794\uBC1C\uD1B1"
+        intentDescription: "3 \uD53C\uD574\uB85C 3\uD68C \uACF5\uACA9\uD55C\uB2E4."
+        effects:
+        - effectType: 0
+          damageMultiplier: 0.5
+          hitCount: 3
+          amount: 0
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
+      - actionName: "\uAE09\uC2B5"
+        intentDescription: "6 \uD53C\uD574\uB97C \uC900\uB2E4."
+        effects:
+        - effectType: 0
+          damageMultiplier: 1
+          hitCount: 1
+          amount: 0
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
+      transitionAfterActions: 0
+      nextPhaseIndex: -1
+  negoProbability: 0
+  runProbability: 50
+  soul_drop: 3
+  gold_drop: 10
+  exp_drop: 150
+  dropTable: []

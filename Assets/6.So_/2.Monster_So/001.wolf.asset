@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7855a067afac8514398c9145a486482d, type: 3}
+  m_Name: 001.wolf
+  m_EditorClassIdentifier: 
+  monsterName: "\uBC24\uC6B8\uC74C \uB291\uB300"
+  monsterSprite: {fileID: 5275507912062409062, guid: 111f0bbee31c7f34faade1ced47e38b7, type: 3}
+  scaleModifier: 2
+  maxHp: 36
+  attackPower: 8
+  defencePower: 0
+  attackSpeed: 5
+  battlePattern:
+    startPhaseIndex: 0
+    phases:
+    - mode: 0
+      actions:
+      - actionName: "\uBB3C\uC5B4\uB72F\uAE30"
+        intentDescription: "8 \uD53C\uD574\uB97C \uC900\uB2E4."
+        effects:
+        - effectType: 0
+          damageMultiplier: 1
+          hitCount: 1
+          amount: 0
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
+      - actionName: "\uB3C4\uC57D \uD560\uD034\uAE30"
+        intentDescription: "6 \uD53C\uD574\uB85C 2\uD68C \uACF5\uACA9\uD55C\uB2E4."
+        effects:
+        - effectType: 0
+          damageMultiplier: 0.75
+          hitCount: 2
+          amount: 0
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
+      transitionAfterActions: 0
+      nextPhaseIndex: -1
+  negoProbability: 0
+  runProbability: 30
+  soul_drop: 5
+  gold_drop: 3
+  exp_drop: 150
+  dropTable: []

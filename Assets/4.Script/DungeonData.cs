@@ -11,6 +11,13 @@ public class DungeonData : ScriptableObject
     public List<Monster_So> eliteMonsters;
     public List<Monster_So> bossMonsters;
 
+    [Header("전투 승리 보상")]
+    // 같은 던전에서는 등장한 몬스터와 관계없이
+    // 일반 / 정예 / 보스 전투에 해당하는 보상을 사용한다.
+    public BattleRewardAmounts normalBattleReward;
+    public BattleRewardAmounts eliteBattleReward;
+    public BattleRewardAmounts bossBattleReward;
+
     public DialogueSequence startEvent;
     // 던전 진입 시 랜덤으로 몬스터 한 마리 뽑기
     public Monster_So GetRandomMonster()

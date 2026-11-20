@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7855a067afac8514398c9145a486482d, type: 3}
+  m_Name: 002.ghost
+  m_EditorClassIdentifier: 
+  monsterName: "\uBC30\uD68C\uD558\uB294 \uD63C\uB839"
+  monsterSprite: {fileID: -2749261331969839478, guid: eaa255d13107540419fbc0cf1ee6802b, type: 3}
+  scaleModifier: 2
+  maxHp: 34
+  attackPower: 7
+  defencePower: 0
+  attackSpeed: 5
+  battlePattern:
+    startPhaseIndex: 0
+    phases:
+    - mode: 0
+      actions:
+      - actionName: "\uC11C\uB298\uD55C \uC190\uAE38"
+        intentDescription: "\uD604\uC7AC \uACF5\uACA9\uB825\uC758 100%\uB85C \uACF5\uACA9\uD55C\uB2E4."
+        effects:
+        - effectType: 0
+          damageMultiplier: 1
+          hitCount: 1
+          amount: 0
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
+      - actionName: "\uC6D0\uD55C \uBAA8\uC73C\uAE30"
+        intentDescription: "\uC774\uBC88 \uC804\uD22C \uB3D9\uC548 \uACF5\uACA9\uB825\uC774
+          2 \uC99D\uAC00\uD55C\uB2E4."
+        effects:
+        - effectType: 1
+          damageMultiplier: 1
+          hitCount: 1
+          amount: 2
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
+      - actionName: "\uC6D0\uD63C\uC758 \uC808\uADDC"
+        intentDescription: "\uD604\uC7AC \uACF5\uACA9\uB825\uC758 150%\uB85C \uACF5\uACA9\uD55C\uB2E4."
+        effects:
+        - effectType: 0
+          damageMultiplier: 1.5
+          hitCount: 1
+          amount: 0
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
+      transitionAfterActions: 0
+      nextPhaseIndex: -1
+  negoProbability: 30
+  runProbability: 70
+  soul_drop: 10
+  gold_drop: 1
+  exp_drop: 150
+  dropTable: []

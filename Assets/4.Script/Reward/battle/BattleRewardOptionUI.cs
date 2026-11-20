@@ -59,6 +59,24 @@ public class BattleRewardOptionUI : MonoBehaviour
         // 보상을 실제로 선택한 뒤 도달할 수련 단계
         int previewLevel = SkillDescriptionBuilder.GetRewardPreviewLevel(skill, player);
 
+        // 보상 선택 후 적용될 수련 단계의 데이터를 가져온다.
+        SkillLevelData previewData =
+            skill.GetLevelData(previewLevel);
+
+        if (previewData == null)
+        {
+            return;
+        }
+
+        // 선택 후 수련 단계의 재사용 대기시간
+        cooldownText.text =
+            $"재사용 : {previewData.cooldownTurns}";
+
+        // 선택 후 수련 단계의 시작 대기시간(선쿨)
+        firstCooldownText.text =
+            $"대기시간 : {previewData.initialCooldownTurns}";
+
+
         rarityText.text =
             GameManager.Instance.RareString(skill.rarity);
 

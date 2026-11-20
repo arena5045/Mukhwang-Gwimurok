@@ -441,7 +441,10 @@ public class GameManager : MonoBehaviour
             yield break;
         }
 
-        BattleManager.instance.BattleStart(monster);
+        // 일반 전투의 몬스터와 보상을 함께 전달한다.
+        BattleManager.instance.BattleStart(
+            monster,
+            Context.cur_dungeon.normalBattleReward);
         //맵 노드 이동
         GameUiManager.Instance.MapNodeMove();
         // 3. 잠시 대기 (너무 빠르면 깜빡이는 느낌이 들 수 있음)
@@ -479,7 +482,10 @@ public class GameManager : MonoBehaviour
             yield break;
         }
 
-        BattleManager.instance.BattleStart(monster);
+        // 정예 전투의 몬스터와 보상을 함께 전달한다.
+        BattleManager.instance.BattleStart(
+            monster,
+            Context.cur_dungeon.eliteBattleReward);
         //맵 노드 이동
         GameUiManager.Instance.MapNodeMove();
         // 3. 잠시 대기 (너무 빠르면 깜빡이는 느낌이 들 수 있음)
@@ -517,7 +523,11 @@ public class GameManager : MonoBehaviour
             yield break;
         }
 
-        BattleManager.instance.BattleStart(monster);
+        // 보스 전투의 몬스터와 보상을 함께 전달한다.
+        BattleManager.instance.BattleStart(
+            monster,
+            Context.cur_dungeon.bossBattleReward);
+
         //맵 노드 이동
         GameUiManager.Instance.MapNodeMove();
         // 3. 잠시 대기 (너무 빠르면 깜빡이는 느낌이 들 수 있음)

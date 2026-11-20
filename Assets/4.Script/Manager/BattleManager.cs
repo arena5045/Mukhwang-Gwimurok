@@ -41,6 +41,10 @@ public class BattleManager : MonoBehaviour
     //기습받음
     bool surprise = false;
 
+    // 전투 시작 시 던전 설정에서 복사한 승리 보상.
+    // 몬스터 능력치와 분리해 현재 전투 단위로 보관한다.
+    private BattleRewardAmounts currentBattleReward;
+
     // 자동전투 코루틴의 단일 실행 여부를 추적한다. 버튼을 빠르게 반복 호출하거나
     // 여러 진입 경로가 겹쳐도 피해·로그·보상이 중복 처리되지 않게 한다.
     private Coroutine autoBattleCoroutine;
@@ -51,6 +55,10 @@ public class BattleManager : MonoBehaviour
         public Sprite sprite;
         public int maxHp;
         public int currentHp;
+
+        // 적이 현재 보유한 방어도. 각 타격의 최종 피해를 HP보다 먼저 흡수하며,
+        // 다음 적 차례가 시작되면 남은 방어도는 사라진다.
+        public int currentGuard;
 
         public float atk;
         public float buffatk = 0f;
@@ -73,9 +81,6 @@ public class BattleManager : MonoBehaviour
         public float run_pro;
         public float nego_pro;
 
-        public int reward_gold;
-        public int reward_soul;
-        public int reward_exp;
 
         public MonsterSetInfo(Monster_So monster_data)
         {
@@ -84,16 +89,13 @@ public class BattleManager : MonoBehaviour
             imgsize = monster_data.scaleModifier;
             maxHp = monster_data.maxHp;
             currentHp = monster_data.maxHp;
+            currentGuard = 0;
             atk = monster_data.attackPower;
             def = monster_data.defencePower;
             speed = monster_data.attackSpeed;
 
             run_pro = monster_data.runProbability;
             nego_pro = monster_data.negoProbability;
-
-            reward_gold = monster_data.gold_drop;
-            reward_soul = monster_data.soul_drop;
-            reward_exp = monster_data.exp_drop;
         }
     }
 
@@ -222,9 +224,14 @@ public class BattleManager : MonoBehaviour
         MonsterActionCount = 0;
         CurrentActionPoints = 0;
 
+        // 이전 런의 전투 보상을 초기화한다.
+        currentBattleReward = default;
+
         //현재 플레이어 정보 초기화
         currentPlayerInfo = null;
         currentMonsterInfo = null;
+
+        buiManager?.UpdateMonsterGuardUI(0);
 
         //현재 적 정보 초기화
         enemyPatternRuntime = null;
@@ -233,8 +240,12 @@ public class BattleManager : MonoBehaviour
     }
 
 
-    public void BattleSetting(Monster_So monster_data)
+    public void BattleSetting(Monster_So monster_data,BattleRewardAmounts rewards)
     {
+        // 새 전투의 보상으로 교체한다.
+        // 이전 일반·정예·보스 전투의 보상이 남지 않게 한다.
+        currentBattleReward = rewards;
+
         // 행동 카운트는 런 전체 누적값이 아니라 현재 전투 단위의 런타임 값이다.
         PlayerActionCount = 0;
         MonsterActionCount = 0;
@@ -398,8 +409,15 @@ public class BattleManager : MonoBehaviour
                 yield return new WaitForSeconds(0.5f);
             }
 
-            int reward_gold = Mathf.RoundToInt(currentMonsterInfo.reward_gold * Random.Range(0.8f, 1.2f));
-            int reward_soul = Mathf.RoundToInt(currentMonsterInfo.reward_soul * Random.Range(0.8f, 1.2f));
+            // 몬스터가 아니라 이번 전투에 지정된 보상 기본값을 사용한다.
+            // 기존 금화·혼백의 지급량 변동은 유지한다.
+            int reward_gold = Mathf.RoundToInt(
+                currentBattleReward.gold *
+                Random.Range(0.9f, 1.1f));
+
+            int reward_soul = Mathf.RoundToInt(
+                currentBattleReward.soul *
+                Random.Range(0.9f, 1.1f));
 
             GameManager.Instance.ChangeGold(reward_gold);
             GameManager.Instance.ChangeSoul(reward_soul);
@@ -417,8 +435,9 @@ public class BattleManager : MonoBehaviour
 
             bool rewardFlowComplete = false;
 
+            // 경험치는 이번 전투에 지정된 고정값을 사용한다.
             int reward_exp =
-                currentMonsterInfo.reward_exp;
+                currentBattleReward.exp;
 
             if (reward_exp > 0)
             {
@@ -699,6 +718,11 @@ public class BattleManager : MonoBehaviour
 
         MonsterActionCount++;
 
+        // 플레이어 방어도와 동일하게 자신의 다음 차례 시작 시 남은 값을 지운다.
+        // 적 행동으로 새로 얻은 방어도는 이어지는 플레이어 차례 동안 피해를 흡수한다.
+        currentMonsterInfo.currentGuard = 0;
+        buiManager.UpdateMonsterGuardUI(0);
+
         // 기척에 예고된 행동 실제 실행
         yield return ExecuteCurrentEnemyAction();
 
@@ -881,10 +905,8 @@ public class BattleManager : MonoBehaviour
             // 설명창에서 계산하는 것만으로는 이 값이 바뀌지 않는다.
             currentPlayerInfo.hasAttackedThisTurn = true;
 
-            currentMonsterInfo.currentHp = Mathf.Max(0, currentMonsterInfo.currentHp - damage);
-            buiManager.AddLog($"<color=red>{currentMonsterInfo.name}</color>에게 <color=red>{damage}</color>의 피해를 입혔다!");
-            buiManager.UpdateMonsterHP(currentMonsterInfo.currentHp);
-            buiManager.MonsterDamageEffect();
+            // 기본공격, 직접 사용 무공, 추가타가 같은 경로에서 매 타격마다 방어도를 소모한다.
+            yield return ApplyDamageToMonster(damage);
 
             // 이 타격으로 적이 살아있다면 타격 후 스킬을 검사
             if (currentMonsterInfo.currentHp > 0)
@@ -915,6 +937,45 @@ public class BattleManager : MonoBehaviour
         yield return new WaitForSeconds(afterAttackDelay);
     }
 
+    /// <summary>
+    /// 기세·활력까지 반영한 타격 피해를 적에게 적용한다.
+    /// 방어도가 흡수한 양만큼 먼저 차감한 뒤 남은 피해만 HP에 반영한다.
+    /// 완전 방어 시 HP 갱신과 HP 피격 연출을 생략해 체력 피해와 구분한다.
+    /// </summary>
+    private IEnumerator ApplyDamageToMonster(int damage)
+    {
+        if (currentMonsterInfo == null || currentMonsterInfo.currentHp <= 0)
+        {
+            yield break;
+        }
+
+        damage = Mathf.Max(0, damage);
+        int blockedDamage = Mathf.Min(currentMonsterInfo.currentGuard, damage);
+        currentMonsterInfo.currentGuard -= blockedDamage;
+        buiManager.UpdateMonsterGuardUI(currentMonsterInfo.currentGuard);
+
+        int hpDamage = damage - blockedDamage;
+        if (blockedDamage > 0)
+        {
+            buiManager.AddLog(
+                $"<color=red>{currentMonsterInfo.name}</color>이(가) 방어도로 " +
+                $"<color=#99FF99>{blockedDamage}</color>의 피해를 막았다!");
+
+            if (hpDamage == 0)
+            {
+                yield return new WaitForSeconds(0.5f);
+                yield break;
+            }
+        }
+
+        currentMonsterInfo.currentHp = Mathf.Max(0, currentMonsterInfo.currentHp - hpDamage);
+        buiManager.AddLog(
+            $"<color=red>{currentMonsterInfo.name}</color>에게 " +
+            $"<color=red>{hpDamage}</color>의 피해를 입혔다!");
+        buiManager.UpdateMonsterHP(currentMonsterInfo.currentHp);
+        buiManager.MonsterDamageEffect();
+    }
+
     public IEnumerator ExecuteSkillAttack(
         string skillName,
         float damageMultiplier,
@@ -937,7 +998,7 @@ public class BattleManager : MonoBehaviour
             afterAttackDelay,
             sourceSkill,
             chain,
-            showActionLog: true);
+            showActionLog: false);
     }
 
 
@@ -1002,6 +1063,23 @@ public class BattleManager : MonoBehaviour
         return amount;
     }
     /// <summary>
+    /// 적에게 고정 수치의 방어도를 누적해서 부여한다.
+    /// GainShield의 amount를 정수화한 값으로 호출하며, 실제 획득량을 반환한다.
+    /// </summary>
+    public int GainMonsterGuard(int amount)
+    {
+        if (currentMonsterInfo == null || amount <= 0)
+        {
+            return 0;
+        }
+
+        int gainedGuard = Mathf.Min(amount, int.MaxValue - currentMonsterInfo.currentGuard);
+        currentMonsterInfo.currentGuard += gainedGuard;
+        buiManager.UpdateMonsterGuardUI(currentMonsterInfo.currentGuard);
+        return gainedGuard;
+    }
+
+    /// <summary>
     /// 현재 플레이어의 방어력을 기준으로
     /// 획득할 방어도를 계산한다.
     /// 실제 상태는 변경하지 않는다.
@@ -1024,9 +1102,16 @@ public class BattleManager : MonoBehaviour
                 defensePercent / 100f));
     }
 
-    public void BattleStart(Monster_So monster_data)
+    /// <summary>
+    /// 선택된 몬스터와 해당 전투의 승리 보상으로 전투를 시작한다.
+    /// </summary>
+    public void BattleStart(
+        Monster_So monster_data,
+        BattleRewardAmounts rewards)
     {
-        BattleSetting(monster_data);
+        BattleSetting(
+            monster_data,
+            rewards);
     }
 
     public void BattleBtn()
@@ -1174,6 +1259,16 @@ public class BattleManager : MonoBehaviour
                             $"<color=red>{currentMonsterInfo.name}</color>의 " +
                             $"방어력이 {effect.amount:0.#} 증가했다!");
 
+                        break;
+                    }
+
+                case EnemyActionEffectType.GainShield:
+                    {
+                        // 적 방어도는 방어력 계수 대신 SO에 설정한 고정 수치를 사용한다.
+                        int gainedGuard = GainMonsterGuard(Mathf.Max(0, Mathf.RoundToInt(effect.amount)));
+                        buiManager.AddLog(
+                            $"<color=red>{currentMonsterInfo.name}</color>이(가) " +
+                            $"방어도 <color=#99FF99>{gainedGuard}</color>을 얻었다.");
                         break;
                     }
 

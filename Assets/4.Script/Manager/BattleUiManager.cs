@@ -20,6 +20,10 @@ public class BattleUiManager : MonoBehaviour
     public TMP_Text monsterHpText;
     public Image monsterHpbar;
 
+    [Header("적 방어도 UI")]
+    [SerializeField] private GameObject monsterGuardUI;
+    [SerializeField] private TMP_Text monsterGuardText;
+
     public Transform logParent;      // Scroll View의 Content
     public GameObject logPrefab;     // 로그 한 줄 프리팹
     public ScrollRect scrollRect;    // 스크롤 뷰 컴포넌트
@@ -154,6 +158,7 @@ private IEnumerator ScrollToBottom()
         monsterBaseScale = monsterSprite.transform.localScale;
 
         monsterHpbar.fillAmount = 1f;
+        UpdateMonsterGuardUI(monsinfo.currentGuard);
 
         /*
         string startlog = monsinfo.name + "(이)가 나타났다! \n\n 여기서는...";
@@ -182,6 +187,7 @@ private IEnumerator ScrollToBottom()
 
         battlePannel.SetActive(false);
         battle_end_panel.SetActive(false);
+        UpdateMonsterGuardUI(0);
         ClearLog();
         ResetMonsterVisual();
 
@@ -356,6 +362,22 @@ private IEnumerator ScrollToBottom()
     }
 
 
+    /// <summary>
+    /// 적 체력바 옆의 방어도 아이콘과 숫자를 갱신한다.
+    /// 방어도 0에서는 아이콘을 숨기며, 새 전투·맵 복귀 시에도 이 경로로 정리한다.
+    /// </summary>
+    public void UpdateMonsterGuardUI(int guard)
+    {
+        if (monsterGuardUI == null || monsterGuardText == null)
+        {
+            return;
+        }
+
+        int displayGuard = Mathf.Max(0, guard);
+        monsterGuardText.text = displayGuard.ToString();
+        monsterGuardUI.SetActive(displayGuard > 0);
+    }
+
     internal void UpdateMonsterHP(int monsterHp)
     {  
         float hp_value = Mathf.Clamp01((float)monsterHp / instance.currentMonsterInfo.maxHp);
@@ -429,6 +451,10 @@ private IEnumerator ScrollToBottom()
             case EnemyActionEffectType.GainDefense:
                 value =
                     $"방어력 +{effect.amount:0.#}";
+                break;
+
+            case EnemyActionEffectType.GainShield:
+                value = $"방어도 +{Mathf.Max(0, Mathf.RoundToInt(effect.amount))}";
                 break;
 
             case EnemyActionEffectType.ApplyBattleStatus:

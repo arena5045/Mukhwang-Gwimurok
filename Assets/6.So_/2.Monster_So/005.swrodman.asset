@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7855a067afac8514398c9145a486482d, type: 3}
+  m_Name: 005.swrodman
+  m_EditorClassIdentifier: 
+  monsterName: "\uBC29\uB791\uAC80\uADC0"
+  monsterSprite: {fileID: 7096352024863751258, guid: 29ceb6d757c052646a10d20cf3a6d46f, type: 3}
+  scaleModifier: 0.8
+  maxHp: 100
+  attackPower: 12
+  defencePower: 0
+  attackSpeed: 3
+  battlePattern:
+    startPhaseIndex: 0
+    phases:
+    - mode: 0
+      actions:
+      - actionName: "\uB5A0\uB3CC\uC774\uC758 \uAC80"
+        intentDescription: "12 \uD53C\uD574\uB97C \uC900\uB2E4."
+        effects:
+        - effectType: 0
+          damageMultiplier: 1
+          hitCount: 1
+          amount: 0
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
+      transitionAfterActions: 1
+      nextPhaseIndex: 1
+    - mode: 0
+      actions:
+      - actionName: "\uC0B4\uAC80 \uBCBC\uB9AC\uAE30"
+        intentDescription: "\uC774\uBC88 \uC804\uD22C \uB3D9\uC548 \uACF5\uACA9\uB825\uC774
+          5 \uC99D\uAC00\uD55C\uB2E4. \uB2E4\uC74C \uD589\uB3D9\uC740 \uAC15\uACF5\uC774\uB2E4."
+        effects:
+        - effectType: 1
+          damageMultiplier: 1
+          hitCount: 1
+          amount: 5
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
+      - actionName: "\uADC0\uC0B4 \uC77C\uC12C"
+        intentDescription: "\uD604\uC7AC \uACF5\uACA9\uB825\uC758 150%\uB85C \uACF5\uACA9\uD55C\uB2E4."
+        effects:
+        - effectType: 0
+          damageMultiplier: 1.5
+          hitCount: 1
+          amount: 0
+          statusTarget: 0
+          statusData: {fileID: 0}
+          statusAmount: 0
+      transitionAfterActions: 0
+      nextPhaseIndex: -1
+  negoProbability: 80
+  runProbability: 50
+  soul_drop: 15
+  gold_drop: 5
+  dropTable: []
